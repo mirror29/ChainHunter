@@ -12,14 +12,21 @@ import { cn } from "@/lib/utils";
 import { LogoIcon } from "@/components/ui/logo-icon";
 import { useTheme } from "next-themes";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
-export function Navbar() {
+interface NavbarProps {
+  pageType?: "home" | "login" | "chat";
+}
+
+export function Navbar({ pageType = "home" }: NavbarProps) {
   const { t } = useI18n();
   const { theme, systemTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
   // 确定当前是否是亮色模式
   const isLightMode =
@@ -40,7 +47,16 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navigationItems = [
+  const handleGetStarted = () => {
+    if (status === "authenticated") {
+      router.push("/chat");
+    } else {
+      router.push("/login");
+    }
+  };
+
+  // 只在首页显示的导航项
+  const homeNavigationItems = [
     { href: "/#home", label: t("nav.home") },
     { href: "/#features", label: t("nav.features") },
     { href: "/#roadmap", label: t("nav.roadmap") },
@@ -48,11 +64,15 @@ export function Navbar() {
     { href: "/#contact", label: t("nav.contact") },
   ];
 
+  // 根据页面类型选择导航项
+  const navigationItems =
+    pageType === "home" ? homeNavigationItems : [];
+
   return (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
+        isScrolled || pageType !== "home"
           ? "bg-background/80 backdrop-blur-md shadow-sm py-2"
           : "bg-transparent py-4"
       )}
@@ -94,11 +114,7 @@ export function Navbar() {
               href={item.href}
               className={cn(
                 "text-foreground/70 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/5 dark:hover:bg-blue-900/20 dark:text-slate-300 dark:hover:text-blue-400",
-                index === 0 && "text-primary dark:text-blue-400",
-                index === 1 && "text-foreground/90 dark:text-slate-300",
-                index === 2 && "text-foreground/90 dark:text-slate-300",
-                index === 3 && "text-foreground/90 dark:text-slate-300",
-                index === 4 && "text-foreground/90 dark:text-slate-300"
+                index === 0 && "text-primary dark:text-blue-400"
               )}
             >
               {item.label}
@@ -109,6 +125,19 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LanguageToggle />
+
+          {/* 在导航栏右侧添加"开始使用"按钮，仅在主页和登录页显示（移动端） */}
+          {pageType !== "chat" && (
+            <Button
+              className="hidden sm:flex md:hidden rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary cursor-pointer dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+              size="sm"
+              onClick={handleGetStarted}
+            >
+              {status === "authenticated"
+                ? t("nav.dashboard")
+                : t("nav.getStarted")}
+            </Button>
+          )}
 
           {/* Mobile menu button */}
           <Button
@@ -194,9 +223,19 @@ export function Navbar() {
                 <ThemeToggle />
                 <LanguageToggle />
               </div>
-              <Button className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary cursor-pointer dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700">
-                {t("nav.getStarted")}
-              </Button>
+              {pageType !== "chat" && (
+                <Button
+                  className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary cursor-pointer dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+                  onClick={() => {
+                    handleGetStarted();
+                    setIsOpen(false);
+                  }}
+                >
+                  {status === "authenticated"
+                    ? t("nav.dashboard")
+                    : t("nav.getStarted")}
+                </Button>
+              )}
             </div>
           </div>
         </SheetContent>

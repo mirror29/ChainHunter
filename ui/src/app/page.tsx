@@ -28,10 +28,12 @@ import {
   teamMembers,
 } from "@/lib/homeConfig";
 import { useRouter } from "next/navigation";
-
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const { t } = useI18n();
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
   // Data for features section
   const features = [
@@ -86,15 +88,17 @@ export default function Home() {
     },
   ];
 
-  const router = useRouter();
-
   const handleGetStarted = () => {
-    router.push("/chat");
+    if (status === "authenticated") {
+      router.push("/chat");
+    } else {
+      router.push("/login");
+    }
   };
 
   return (
     <main className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar pageType="home" />
 
       {/* Hero Section */}
       <section

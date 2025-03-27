@@ -7,80 +7,87 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+// 用户的第三方账户信息
 model Account {
-    id                String  @id @default(cuid())
-    userId            String
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String? @db.Text
-    access_token      String? @db.Text
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String? @db.Text
-    session_state     String?
+    id                String  @id @default(cuid()) // 唯一标识符
+    userId            String // 关联的用户ID
+    type              String // 账户类型
+    provider          String // 提供商名称 (如 github, google)
+    providerAccountId String // 提供商账户ID
+    refresh_token     String? @db.Text // 刷新令牌
+    access_token      String? @db.Text // 访问令牌
+    expires_at        Int? // 令牌过期时间
+    token_type        String? // 令牌类型
+    scope             String? // 权限范围
+    id_token          String? @db.Text // ID令牌
+    session_state     String? // 会话状态
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 用户关系
 
     @@unique([provider, providerAccountId])
 }
 
+// 用户会话信息
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id           String   @id @default(cuid()) // 唯一标识符
+    sessionToken String   @unique // 会话令牌
+    userId       String // 用户ID
+    expires      DateTime // 过期时间
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade) // 用户关系
 }
 
+// 用户信息
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    password      String
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    chats         Chat[]
-    files         File[]
+    id            String    @id @default(cuid()) // 唯一标识符
+    name          String? // 用户名称
+    email         String?   @unique // 用户邮箱
+    emailVerified DateTime? // 邮箱验证时间
+    password      String // 密码 (已加密)
+    image         String? // 用户头像
+    accounts      Account[] // 用户的第三方账户
+    sessions      Session[] // 用户的会话
+    chats         Chat[] // 用户的聊天
+    files         File[] // 用户上传的文件
 }
 
+// 验证令牌
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+    identifier String // 标识符 (通常是用户邮箱)
+    token      String   @unique // 验证令牌
+    expires    DateTime // 过期时间
 
     @@unique([identifier, token])
 }
 
+// 聊天会话
 model Chat {
-    id        String    @id @default(cuid())
-    title     String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    userId    String
-    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    messages  Message[]
+    id        String    @id @default(cuid()) // 唯一标识符
+    title     String // 聊天标题
+    createdAt DateTime  @default(now()) // 创建时间
+    updatedAt DateTime  @updatedAt // 更新时间
+    userId    String // 所属用户ID
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade) // 用户关系
+    messages  Message[] // 聊天消息
 }
 
+// 聊天消息
 model Message {
-    id        String   @id @default(cuid())
-    content   String   @db.Text
-    role      String // user, assistant, system
-    createdAt DateTime @default(now())
-    chatId    String
-    chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+    id        String   @id @default(cuid()) // 唯一标识符
+    content   String   @db.Text // 消息内容
+    role      String // 消息角色 (user, assistant, system)
+    createdAt DateTime @default(now()) // 创建时间
+    chatId    String // 所属聊天ID
+    chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade) // 聊天关系
 }
 
+// 用户文件
 model File {
-    id        String   @id @default(cuid())
-    name      String
-    path      String
-    size      Int
-    mimeType  String
-    createdAt DateTime @default(now())
-    userId    String
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id @default(cuid()) // 唯一标识符
+    name      String // 文件名
+    path      String // 文件路径
+    size      Int // 文件大小
+    mimeType  String // MIME类型
+    createdAt DateTime @default(now()) // 创建时间
+    userId    String // 所属用户ID
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // 用户关系
 }
