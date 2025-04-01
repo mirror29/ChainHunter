@@ -181,53 +181,74 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      setTimeout(() => {
-        const botResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: `I received your message: "${input}". This is a placeholder response. In a real implementation, this would be an API call to your AI backend.`,
-          timestamp: new Date(),
-        };
+      // Call our API
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+          chatId: currentChatId,
+          chatHash: currentChatHash,
+        }),
+      });
 
-        const updatedMessages = [...messages, newUserMessage, botResponse];
-        setMessages(updatedMessages);
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
 
-        // Save chat after receiving the response
-        const chatTitle =
-          updatedMessages.find((m) => m.role === "user")?.content.slice(0, 30) +
-            "..." || "New Chat";
+      const data = await response.json();
 
-        const chatToSave: ChatSession = {
-          id: currentChatId || Date.now().toString(),
-          hash: currentChatHash,
-          title: chatTitle,
-          lastMessage: botResponse.content.slice(0, 40) + "...",
-          timestamp: new Date(),
-          messages: updatedMessages,
-        };
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.message,
+        timestamp: new Date(),
+      };
 
-        // Check and update the chat in the session list
-        const hashExists = chatSessions.some(
-          (session) => session.hash === currentChatHash
+      const updatedMessages = [...messages, newUserMessage, botResponse];
+      setMessages(updatedMessages);
+
+      // Update current chat ID if it's a new chat
+      if (data.chatId && !currentChatId) {
+        setCurrentChatId(data.chatId);
+      }
+
+      // Update chat sessions list
+      const chatTitle =
+        updatedMessages.find((m) => m.role === "user")?.content.slice(0, 30) +
+          "..." || "New Chat";
+
+      const chatToSave: ChatSession = {
+        id: currentChatId || data.chatId || Date.now().toString(),
+        hash: currentChatHash,
+        title: chatTitle,
+        lastMessage: botResponse.content.slice(0, 40) + "...",
+        timestamp: new Date(),
+        messages: updatedMessages,
+      };
+
+      // Check and update the chat in the session list
+      const hashExists = chatSessions.some(
+        (session) => session.hash === currentChatHash
+      );
+
+      if (!hashExists) {
+        setChatSessions((prev) => [chatToSave, ...prev]);
+      } else {
+        setChatSessions((prev) =>
+          prev.map((session) =>
+            session.hash === currentChatHash ? chatToSave : session
+          )
         );
+      }
 
-        if (!hashExists) {
-          setChatSessions((prev) => [chatToSave, ...prev]);
-        } else {
-          setChatSessions((prev) =>
-            prev.map((session) =>
-              session.hash === currentChatHash ? chatToSave : session
-            )
-          );
-        }
-
-        // Save to database
-        saveChatToDatabase(chatToSave);
-      }, 1000);
+      // Save chat to database after receiving response
+      await saveChatToDatabase(chatToSave);
     } catch (error) {
       console.error("Error sending message:", error);
+    } finally {
       setIsLoading(false);
     }
   };
