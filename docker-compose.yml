@@ -1,7 +1,8 @@
-version: '3.8'
+version: "3.8"
+
 services:
   postgres:
-    image: postgres:14
+    image: postgres:15
     container_name: chainhunter-postgres
     restart: always
     ports:
@@ -9,9 +10,31 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: chainhunter
+      POSTGRES_DB: chaindb
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - 3000:3000
+  #   environment:
+  #     - PYTHON_API_URL=http://python_backend:8000
+  #   depends_on:
+  #     - postgres
+  #     - python_backend
+
+  # python_backend:
+  #   build:
+  #     context: ./python_backend
+  #   ports:
+  #     - 8000:8000
+  #   environment:
+  #     - DEEPSEEK_API_BASE=${DEEPSEEK_API_BASE}
+  #     - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+  #   depends_on:
+  #     - postgres
 
 volumes:
   postgres_data:
