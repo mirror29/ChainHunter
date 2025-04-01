@@ -5,6 +5,7 @@ node_modules/
 /.next/
 /out/
 /dist/
+.venv/
 
 # IDE/Editor specific
 .vscode/
