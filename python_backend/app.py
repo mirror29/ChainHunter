@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional
 import asyncio
 import os
 from dotenv import load_dotenv
+from fastapi.responses import StreamingResponse
 from agents import OpenAIChatCompletionsModel, Agent, Runner, set_default_openai_client
 from openai import AsyncOpenAI
 
@@ -66,6 +67,7 @@ class ChatRequest(BaseModel):
     userId: Optional[str] = None
     chatId: Optional[str] = None
     chatHash: Optional[str] = None
+    stream: Optional[bool] = False
 
 
 class ChatResponse(BaseModel):
@@ -74,24 +76,65 @@ class ChatResponse(BaseModel):
     success: bool = True
 
 
-@app.post("/api/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest = Body(...)):
+async def stream_response(agent, input_items, chat_id):
+    """Generate streaming response from the agent."""
     try:
-        # Prepare input for Runner
-        input_items = [{"content": request.message, "role": "user"}]
+        # 初始化响应，分割每个字符
+        response_text = ""
 
-        # Run the triage agent
-        result = await Runner.run(triage_agent, input_items)
+        # 请求完整响应
+        result = await Runner.run(agent, input_items)
 
-        # Extract the result
+        # 提取结果
         markdown_text = (
             result.final_output.data
             if hasattr(result.final_output, "data")
             else str(result.final_output)
         )
 
-        # Return the response - database operations will be handled by the frontend
-        return ChatResponse(message=markdown_text, chatId=request.chatId, success=True)
+        # 模拟流式输出，每个字符作为一个delta
+        for char in markdown_text:
+            response_text += char
+            # 构造JSON响应
+            yield f'{{"delta":"{char}", "chatId":"{chat_id}"}}\n'
+            # 添加小延迟使输出更自然
+            await asyncio.sleep(0.01)
+
+        # 发送完成信号
+        yield f'{{"done":true, "message":"{response_text}", "chatId":"{chat_id}"}}\n'
+
+    except Exception as e:
+        # 发送错误信号
+        yield f'{{"error":true, "message":"Error: {str(e)}"}}\n'
+
+
+@app.post("/api/chat")
+async def chat_endpoint(request: ChatRequest = Body(...)):
+    try:
+        # 准备Agent的输入
+        input_items = [{"content": request.message, "role": "user"}]
+
+        # 检查是否请求流式响应
+        if request.stream:
+            # 返回流式响应
+            return StreamingResponse(
+                stream_response(triage_agent, input_items, request.chatId),
+                media_type="application/json"
+            )
+        else:
+            # 非流式响应处理
+            # 运行triage_agent
+            result = await Runner.run(triage_agent, input_items)
+
+            # 提取结果
+            markdown_text = (
+                result.final_output.data
+                if hasattr(result.final_output, "data")
+                else str(result.final_output)
+            )
+
+            # 返回响应 - 数据库操作由前端处理
+            return ChatResponse(message=markdown_text, chatId=request.chatId, success=True)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
@@ -99,5 +142,4 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
