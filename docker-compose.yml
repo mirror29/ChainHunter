@@ -14,27 +14,31 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   ports:
-  #     - 3000:3000
-  #   environment:
-  #     - PYTHON_API_URL=http://python_backend:8000
-  #   depends_on:
-  #     - postgres
-  #     - python_backend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: app.dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      - NEXT_PUBLIC_API_URL=http://python_backend:8000
+    depends_on:
+      - postgres
+      - python_backend
 
-  # python_backend:
-  #   build:
-  #     context: ./python_backend
-  #   ports:
-  #     - 8000:8000
-  #   environment:
-  #     - DEEPSEEK_API_BASE=${DEEPSEEK_API_BASE}
-  #     - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-  #   depends_on:
-  #     - postgres
+  python_backend:
+    build:
+      context: ./python_backend
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - DEEPSEEK_API_BASE=${DEEPSEEK_API_BASE}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/chaindb
+    command: ["python", "main.py"]
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:

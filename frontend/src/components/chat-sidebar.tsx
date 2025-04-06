@@ -90,7 +90,7 @@ export function ChatSidebar({
       <div className="p-4">
         <Button
           onClick={onNewChat}
-          className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md"
+          className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           New Chat
@@ -99,8 +99,8 @@ export function ChatSidebar({
 
       {/* Chats List */}
       <div className="flex-1 overflow-hidden px-2">
-        <ScrollArea className="h-full">
-          <div className="space-y-2">
+        <div className="h-full overflow-y-auto">
+          <div className="space-y-2 flex-1">
             {sessions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -117,17 +117,17 @@ export function ChatSidebar({
                       : "hover:bg-muted/50"
                   }`}
                 >
-                  <button
+                  <div
                     onClick={() => onSelectSession(session.id)}
-                    className="w-full text-left p-3"
+                    className="w-full text-left p-3 flex-1 cursor-pointer"
                   >
                     <div className="flex justify-between items-start">
-                      <span className="font-medium truncate max-w-[180px]">
+                      <span className="font-medium truncate max-w-[130px]">
                         {session.title}
                       </span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(session.timestamp), "MMM d")}
+                      <div className="flex items-center gap-1 flex-shrink-0 min-w-[70px] justify-end">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {format(new Date(session.timestamp), "MM-dd")}
                         </span>
                         {onDeleteChat && (
                           <Popover>
@@ -135,7 +135,8 @@ export function ChatSidebar({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-5 w-5 cursor-pointer ml-1"
+                                className="h-5 w-5 cursor-pointer ml-1 flex-shrink-0"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <Trash2 className="h-3 w-3 text-destructive hover:text-destructive" />
                               </Button>
@@ -149,6 +150,7 @@ export function ChatSidebar({
                                 <Button
                                   variant="destructive"
                                   size="sm"
+                                  className="cursor-pointer"
                                   onClick={(e) => {
                                     handleDeleteChat(session.id, e);
                                   }}
@@ -164,12 +166,12 @@ export function ChatSidebar({
                     <p className="text-sm text-muted-foreground truncate mt-1">
                       {session.lastMessage}
                     </p>
-                  </button>
+                  </div>
                 </div>
               ))
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* User Info and Settings */}
@@ -200,7 +202,7 @@ export function ChatSidebar({
             </Button>
             {/* <Settings className="h-4 w-4 text-muted-foreground" /> */}
           </PopoverTrigger>
-          <PopoverContent className="w-56 shadow-md border-0" align="end">
+          <PopoverContent className="w-56 shadow-md border-0 p-0" align="end">
             <div>
               <div className="space-y-2">
                 <Button
