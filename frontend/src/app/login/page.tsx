@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
@@ -16,7 +17,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Lock, Mail, Github, User, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Navbar } from "@/components/navbar";
+
+// 使用动态导入Navbar，避免静态生成时加载
+const Navbar = dynamic(
+  () => import("@/components/navbar").then((mod) => mod.Navbar),
+  {
+    ssr: false,
+    loading: () => <div className="h-16"></div>,
+  }
+);
 
 export default function LoginPage() {
   const { status } = useSession();

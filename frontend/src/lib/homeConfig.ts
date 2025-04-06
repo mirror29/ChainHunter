@@ -1,11 +1,3 @@
-import {
-  BarChart3,
-  BrainCircuit,
-  Coins,
-  LineChart,
-  Search,
-} from "lucide-react";
-
 // Data for team section
 export const teamMembers = [
   {

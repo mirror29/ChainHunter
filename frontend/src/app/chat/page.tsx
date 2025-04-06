@@ -20,7 +20,6 @@ import {
   ChevronRight,
   SendHorizontal,
   Plus,
-  Upload,
   Bot,
   Loader2,
   X,
@@ -90,37 +89,36 @@ const MessageBubble = ({
             <span>思考中...</span>
           </div>
         ) : (
-          <ReactMarkdown
-            className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-            remarkPlugins={[remarkGfm]}
-            components={{
-              p({ children }) {
-                return <p className="mb-2 last:mb-0">{children}</p>;
-              },
-              code({ node, inline, className, children, ...props }) {
-                if (children.length) {
-                  children[0] = (children[0] as string).replace("`▍`", "▍");
-                }
+          <div className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => (
+                  <p className="mb-2 last:mb-0">{children}</p>
+                ),
+                code: ({ className, children, ...props }) => {
+                  const match = /language-(\w+)/.exec(className || "");
+                  const content = String(children).replace(/\n$/, "");
+                  const lang = match && match[1] ? match[1] : "";
 
-                const match = /language-(\w+)/.exec(className || "");
-
-                return !inline ? (
-                  <CodeBlock
-                    key={Math.random()}
-                    language={(match && match[1]) || ""}
-                    value={String(children).replace(/\n$/, "")}
-                    {...props}
-                  />
-                ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                );
-              },
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
+                  return !className || !className.startsWith("language-") ? (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  ) : (
+                    <CodeBlock
+                      key={Math.random()}
+                      language={lang}
+                      value={content}
+                      {...props}
+                    />
+                  );
+                },
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
       {isUser && (

@@ -25,3 +25,4 @@ config.toml
 # Log files
 logs/
 *.log
+.vercel

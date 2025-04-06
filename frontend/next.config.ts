@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   //     },
   //   ];
   // },
+
+  // 禁用优化CSS，避免critters相关问题
+  experimental: {
+    optimizeCss: false,
+  },
 };
 
 export default nextConfig;

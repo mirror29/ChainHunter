@@ -10,13 +10,22 @@ type ToastType = ToastProps & {
   action?: ToastActionElement;
 };
 
+// 创建默认值，避免在非Provider环境下抛出错误
+const defaultValue = {
+  toasts: [],
+  addToast: () => {},
+  updateToast: () => {},
+  removeToast: () => {},
+  removeAllToasts: () => {},
+};
+
 const ToastContext = createContext<{
   toasts: ToastType[];
   addToast: (props: Omit<ToastType, "id">) => void;
   updateToast: (id: string, props: Partial<ToastType>) => void;
   removeToast: (id: string) => void;
   removeAllToasts: () => void;
-} | null>(null);
+}>(defaultValue);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastType[]>([]);
@@ -61,10 +70,5 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 export function useToast() {
   const context = useContext(ToastContext);
-
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-
   return context;
 }

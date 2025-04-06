@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -44,54 +44,61 @@ export async function GET() {
 
     // 提取哈希值并格式化数据
     const formattedChats = await Promise.all(
-      chats.map(async (chat) => {
-        // 从系统消息查找哈希值
-        const hashMessage = chat.messages.find((msg) =>
-          msg.content.includes("Conversation Hash:")
-        );
-
-        let hash = chat.id; // 如果找不到哈希值，则使用聊天ID作为后备
-
-        if (hashMessage) {
-          const match = hashMessage.content.match(
-            /Conversation Hash: ([\w-]+)/
+      chats.map(
+        async (chat: {
+          messages: any[];
+          id: any;
+          title: any;
+          updatedAt: any;
+        }) => {
+          // 从系统消息查找哈希值
+          const hashMessage = chat.messages.find((msg) =>
+            msg.content.includes("Conversation Hash:")
           );
-          if (match && match[1]) {
-            hash = match[1];
+
+          let hash = chat.id; // 如果找不到哈希值，则使用聊天ID作为后备
+
+          if (hashMessage) {
+            const match = hashMessage.content.match(
+              /Conversation Hash: ([\w-]+)/
+            );
+            if (match && match[1]) {
+              hash = match[1];
+            }
           }
-        }
 
-        // 单独查询每个聊天的最后一条非系统消息
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            chatId: chat.id,
-            role: {
-              not: "system",
+          // 单独查询每个聊天的最后一条非系统消息
+          const lastMessage = await prisma.message.findFirst({
+            where: {
+              chatId: chat.id,
+              role: {
+                not: "system",
+              },
             },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            content: true,
-          },
-        });
+            orderBy: {
+              createdAt: "desc",
+            },
+            select: {
+              content: true,
+            },
+          });
 
-        const previewText = lastMessage
-          ? lastMessage.content.length > 40
-            ? lastMessage.content.slice(0, 40) + "..."
-            : lastMessage.content
-          : "无消息内容";
+          const previewText = lastMessage
+            ? lastMessage.content.length > 40
+              ? lastMessage.content.slice(0, 40) + "..."
+              : lastMessage.content
+            : "无消息内容";
 
-        return {
-          id: chat.id,
-          hash,
-          title: chat.title || "未命名会话",
-          lastMessage: previewText,
-          timestamp: chat.updatedAt,
-          // 不包含完整的消息内容
-        };
-      })
+          return {
+            id: chat.id,
+            hash,
+            title: chat.title || "未命名会话",
+            lastMessage: previewText,
+            timestamp: chat.updatedAt,
+            // 不包含完整的消息内容
+          };
+        }
+      )
     );
 
     return NextResponse.json({
