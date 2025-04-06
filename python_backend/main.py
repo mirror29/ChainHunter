@@ -205,25 +205,7 @@ async def get_mcp_agent():
 
     # 如果agent已初始化，直接返回
     if global_mcp_agent is not None:
-        return global_mcp_agent
-
-    # 尝试初始化，最多3次
-    max_retries = 3
-    for retry in range(max_retries):
-        try:
-            return await init_mcp_servers()
-        except Exception as e:
-            print(f"初始化MCP Agent失败(尝试 {retry+1}/{max_retries}): {str(e)}")
-            if retry == max_retries - 1:
-                # 最后一次尝试失败，创建一个备用Agent（不使用MCP工具）
-                print("创建备用Agent（无MCP工具）")
-                return Agent(
-                    name="备用区块链助手",
-                    instructions="你是一个专业的区块链和加密货币信息助手。由于工具暂时不可用，请尽可能根据你已有的知识回答用户问题。请用中文回复用户。",
-                    model=deepseek_model
-                )
-            # 小暂停后重试
-            await asyncio.sleep(1)
+            return global_mcp_agent
 
 
 async def stream_response(agent, input_items, chat_id):

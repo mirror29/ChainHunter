@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && pnpm install && pnpm build",
+  "outputDirectory": "frontend/.next",
+  "framework": "nextjs",
+  "regions": ["hkg1"],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://python_backend:8000/:path*"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://your-domain.vercel.app/api"
+  }
+}

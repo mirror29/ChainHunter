@@ -90,7 +90,7 @@ export function ChatSidebar({
       <div className="p-4">
         <Button
           onClick={onNewChat}
-          className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md"
+          className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           New Chat
@@ -99,7 +99,7 @@ export function ChatSidebar({
 
       {/* Chats List */}
       <div className="flex-1 overflow-hidden px-2">
-        <ScrollArea className="h-full">
+        <div className="h-full overflow-y-auto">
           <div className="space-y-2 flex-1">
             {sessions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -150,6 +150,7 @@ export function ChatSidebar({
                                 <Button
                                   variant="destructive"
                                   size="sm"
+                                  className="cursor-pointer"
                                   onClick={(e) => {
                                     handleDeleteChat(session.id, e);
                                   }}
@@ -170,7 +171,7 @@ export function ChatSidebar({
               ))
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* User Info and Settings */}
@@ -201,7 +202,7 @@ export function ChatSidebar({
             </Button>
             {/* <Settings className="h-4 w-4 text-muted-foreground" /> */}
           </PopoverTrigger>
-          <PopoverContent className="w-56 shadow-md border-0" align="end">
+          <PopoverContent className="w-56 shadow-md border-0 p-0" align="end">
             <div>
               <div className="space-y-2">
                 <Button

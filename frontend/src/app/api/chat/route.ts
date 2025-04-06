@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
 
           let responseText = "";
           let chatIdFromStream = null;
+          let finalMessageSent = false;
+
+          console.log("前端API开始处理流式响应");
 
           while (true) {
             const { done, value } = await reader.read();
@@ -69,46 +72,36 @@ export async function POST(request: NextRequest) {
 
             // Convert the chunk to text
             const chunk = new TextDecoder().decode(value);
+            console.log("前端API收到数据块:", chunk);
 
-            try {
-              // Each chunk is expected to be a JSON object with a "delta" field
-              // If the backend sends a different format, adjust accordingly
-              const data = JSON.parse(chunk);
-
-              if (data.chatId && !chatIdFromStream) {
-                chatIdFromStream = data.chatId;
-              }
-
-              if (data.delta) {
-                responseText += data.delta;
-
-                // Send the delta to the client
-                controller.enqueue(
-                  encoder.encode(
-                    JSON.stringify({
-                      delta: data.delta,
-                      chatId: chatIdFromStream,
-                    })
-                  )
-                );
-              }
-            } catch (e) {
-              // If the chunk isn't valid JSON, just send it as-is
-              controller.enqueue(encoder.encode(chunk));
+            // 检查数据块是否包含done标志，如果包含则标记已发送完成消息
+            if (
+              chunk.includes('"done":true') ||
+              chunk.includes('"done": true')
+            ) {
+              console.log("检测到后端已发送done消息");
+              finalMessageSent = true;
             }
+
+            // 直接将原始数据块传递给客户端
+            controller.enqueue(encoder.encode(chunk));
           }
 
-          // Final message with complete response and chatId
-          controller.enqueue(
-            encoder.encode(
-              JSON.stringify({
-                done: true,
-                message: responseText,
-                chatId: chatIdFromStream || chatId,
-              })
-            )
-          );
+          // 仅在后端未发送完成消息时添加一个完成消息
+          if (!finalMessageSent) {
+            console.log("后端未发送完成消息，添加额外的完成消息");
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  done: true,
+                  message: responseText,
+                  chatId: chatIdFromStream || chatId,
+                }) + "\n"
+              )
+            );
+          }
         } catch (error) {
+          console.error("流处理错误:", error);
           controller.error(error);
         } finally {
           controller.close();
