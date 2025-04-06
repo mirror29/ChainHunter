@@ -126,19 +126,6 @@ export function Navbar({ pageType = "home" }: NavbarProps) {
           <ThemeToggle />
           <LanguageToggle />
 
-          {/* 在导航栏右侧添加"开始使用"按钮，仅在主页和登录页显示（移动端） */}
-          {pageType !== "chat" && (
-            <Button
-              className="hidden sm:flex md:hidden rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary cursor-pointer dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
-              size="sm"
-              onClick={handleGetStarted}
-            >
-              {status === "authenticated"
-                ? t("nav.dashboard")
-                : t("nav.getStarted")}
-            </Button>
-          )}
-
           {/* Mobile menu button */}
           <Button
             variant="ghost"
@@ -223,19 +210,6 @@ export function Navbar({ pageType = "home" }: NavbarProps) {
                 <ThemeToggle />
                 <LanguageToggle />
               </div>
-              {pageType !== "chat" && (
-                <Button
-                  className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary cursor-pointer dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
-                  onClick={() => {
-                    handleGetStarted();
-                    setIsOpen(false);
-                  }}
-                >
-                  {status === "authenticated"
-                    ? t("nav.dashboard")
-                    : t("nav.getStarted")}
-                </Button>
-              )}
             </div>
           </div>
         </SheetContent>
