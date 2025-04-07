@@ -35,7 +35,6 @@ services:
     environment:
       - DEEPSEEK_API_BASE=${DEEPSEEK_API_BASE}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/chaindb
     command: ["python", "main.py"]
     depends_on:
       - postgres

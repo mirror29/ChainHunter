@@ -1,19 +1,42 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: "standalone",
-  // rewrites: async () => {
-  //   return [
-  //     {
-  //       source: "/api/:path*",
-  //       destination: process.env.NEXT_PUBLIC_API_URL + "/:path*",
-  //     },
-  //   ];
-  // },
+  // Configure Next.js for Vercel deployment
+  output: "standalone",
 
-  // 禁用优化CSS，避免critters相关问题
+  // Disable image optimization since Cloudflare Pages doesn't support it natively
+  images: {
+    unoptimized: true,
+  },
+
+  // Disable CSS optimization for Cloudflare compatibility
   experimental: {
     optimizeCss: false,
+  },
+
+  // Add custom headers for Cloudflare
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=86400",
+          },
+        ],
+      },
+    ];
+  },
+
+  // 添加API路由重写
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "/api/:path*",
+      },
+    ];
   },
 };
 

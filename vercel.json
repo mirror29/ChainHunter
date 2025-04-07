@@ -1,0 +1,22 @@
+{
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/.next",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/python_backend/api/serverless.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "functions": {
+    "api/python_backend/api/serverless.py": {
+      "runtime": "python3.12",
+      "includeFiles": "python_backend/**",
+      "pip": ["--requirement", "python_backend/requirements.txt"]
+    }
+  }
+}
