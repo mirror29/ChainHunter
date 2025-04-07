@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/python_backend/api/serverless.py"
+      "destination": "/api/serverless"
     },
     {
       "source": "/(.*)",
@@ -13,10 +13,9 @@
     }
   ],
   "functions": {
-    "api/python_backend/api/serverless.py": {
+    "api/serverless.py": {
       "runtime": "python3.12",
-      "includeFiles": "python_backend/**",
-      "pip": ["--requirement", "python_backend/requirements.txt"]
+      "includeFiles": "python_backend/**"
     }
   }
 }
