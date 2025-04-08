@@ -69,14 +69,13 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/chat",
       });
 
       if (result?.error) {
         setError(result.error);
         return;
       }
-
-      router.push("/chat");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -134,14 +133,13 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/chat",
       });
 
       if (result?.error) {
         setError(result.error);
         return;
       }
-
-      router.push("/chat");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -152,10 +150,21 @@ export default function LoginPage() {
   const socialLogin = async (provider: string) => {
     setIsLoading(true);
     try {
-      await signIn(provider, { callbackUrl: "/chat" });
+      const result = await signIn(provider, {
+        callbackUrl: "/chat",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+        setIsLoading(false);
+      } else {
+        // 手动重定向
+        router.push("/chat");
+      }
     } catch (error) {
-      console.error("Social login error:", error);
-      setError("Failed to login with social provider. Please try again.");
+      console.error(`${provider}登录错误:`, error);
+      setError(`使用${provider}登录失败，请重试。`);
       setIsLoading(false);
     }
   };
