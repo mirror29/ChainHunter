@@ -964,7 +964,7 @@ export default function ChatPage() {
                   <Button
                     type="submit"
                     size="icon"
-                    className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md"
+                    className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md cursor-pointer"
                     disabled={!input.trim() || isLoading}
                   >
                     <SendHorizontal className="h-4 w-4 text-white" />

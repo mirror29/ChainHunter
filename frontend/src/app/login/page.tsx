@@ -189,9 +189,13 @@ export default function LoginPage() {
               className="w-full"
               onValueChange={(value) => setMode(value as "login" | "register")}
             >
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 ">
+                <TabsTrigger value="login" className="cursor-pointer">
+                  Login
+                </TabsTrigger>
+                <TabsTrigger value="register" className="cursor-pointer">
+                  Register
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -233,7 +237,7 @@ export default function LoginPage() {
                   )}
                   <Button
                     type="submit"
-                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700 cursor-pointer"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -316,7 +320,7 @@ export default function LoginPage() {
                   )}
                   <Button
                     type="submit"
-                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700 cursor-pointer"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -346,7 +350,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-4 w-full">
               <Button
                 variant="outline"
-                className="w-full shadow-sm border-0 hover:shadow-md"
+                className="w-full shadow-sm border-0 hover:shadow-md cursor-pointer"
                 onClick={() => socialLogin("github")}
                 disabled={isLoading}
               >
@@ -355,7 +359,7 @@ export default function LoginPage() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full shadow-sm border-0 hover:shadow-md"
+                className="w-full shadow-sm border-0 hover:shadow-md cursor-pointer"
                 onClick={() => socialLogin("google")}
                 disabled={isLoading}
               >

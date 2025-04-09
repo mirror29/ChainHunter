@@ -28,18 +28,6 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // For demo purposes, allow a demo login
-        if (
-          credentials.email === "demo@chainhunter.ai" &&
-          credentials.password === "demouser"
-        ) {
-          return {
-            id: "demo-user",
-            name: "Demo User",
-            email: "demo@chainhunter.ai",
-          };
-        }
-
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,

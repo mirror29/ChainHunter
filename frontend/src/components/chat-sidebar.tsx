@@ -205,7 +205,7 @@ export function ChatSidebar({
               <div className="space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-2 border-0"
+                  className="w-full justify-start gap-2 border-0 cursor-pointer"
                   onClick={onSignOut}
                 >
                   <LogOut className="h-4 w-4" />

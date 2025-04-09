@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "curl -sSf https://install.sysroot.io/uv | python - && uv pip sync uv.lock && npm install -g coincap-mcp @mzxrai/mcp-webresearch"
+  },
+  "deploy": {
+    "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 300
+  }
+}
