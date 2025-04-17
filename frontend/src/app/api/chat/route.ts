@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
 
             // Convert the chunk to text
             const chunk = new TextDecoder().decode(value);
-            console.log("前端API收到数据块:", chunk);
 
             // 检查数据块是否包含done标志，如果包含则标记已发送完成消息
             if (
