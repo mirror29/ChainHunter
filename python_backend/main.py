@@ -290,8 +290,7 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    # 使用Hugging Face的标准端口7860
-    port = int(os.environ.get("PORT", 7860))
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 @app.get("/health")

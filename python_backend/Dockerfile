@@ -4,36 +4,27 @@ WORKDIR /app
 
 # 安装 Node.js 和 npm
 RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm \
     curl \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# 创建用户(Hugging Face要求)
-RUN useradd -m -u 1000 user
+# 安装uv
+RUN pip install uv
 
-# 安装 UV
-RUN curl -sSf https://install.sysroot.io/uv | python -
+# 复制项目文件
+COPY pyproject.toml .
+COPY uv.lock .
 
-# 设置用户和环境
-USER user
-ENV PATH="/home/user/.local/bin:$PATH"
-ENV PORT=7860
-
-WORKDIR /app
-
-# 复制锁文件和依赖
-COPY --chown=user uv.lock .
-COPY --chown=user requirements.txt .
-
-# 使用UV安装依赖
-RUN python -m uv pip sync uv.lock
+# 使用UV安装依赖（使用--system参数）
+RUN uv pip install --system .
 
 # 安装MCP服务
-RUN npm install -g coincap-mcp @mzxrai/mcp-webresearch
+# RUN npm install -g coincap-mcp @mzxrai/mcp-webresearch
 
 # 复制应用代码
-COPY --chown=user . .
+COPY . .
 
-# 运行应用(必须使用7860端口)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# 运行应用
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

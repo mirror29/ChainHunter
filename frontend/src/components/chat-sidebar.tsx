@@ -150,6 +150,7 @@ export function ChatSidebar({
                                   size="sm"
                                   className="cursor-pointer"
                                   onClick={(e) => {
+                                    e.stopPropagation();
                                     handleDeleteChat(session.id, e);
                                   }}
                                 >
