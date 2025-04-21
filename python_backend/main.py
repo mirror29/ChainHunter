@@ -131,7 +131,7 @@ async def init_mcp_servers():
 
             # MCP服务器参数
             servers_params = [
-                {"name": "cryptoc-prices", "command": "python", "args": ['./mcp/CryptocPrices/main.py']},
+                {"name": "cryptoc-prices", "command": "python", "args": ['./mcp/CryptocPrices/run.py']},
                 # {"name": "coincap-mcp", "command": "npx", "args": ["coincap-mcp"]},
                 # {"name": "webresearch", "command": "npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
             ]

@@ -26,12 +26,12 @@ async def main():
     await mcp_run_multi(
     servers_params=[
         # {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/main.py"]},
-        {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/main.py"]},
+        {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/run.py"]},
         # {"name": "coincap-mcp","command":"npx", "args": ["coincap-mcp"]},
         # {"name": "coincap-mcp","command":"./mcp/coincap-mcp/build/index.js", "args": [""]},
         # {"name": "webresearch","command":"npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
     ],
-    message="sol价格"
+    message="比特币的走势图如何，应该买入还是卖出"
     )
 
 async def mcp_run_multi(servers_params, message):

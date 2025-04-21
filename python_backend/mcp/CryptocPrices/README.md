@@ -1,164 +1,115 @@
-# 加密货币市场分析服务 (CryptocPrices)
+# 加密货币价格分析服务
 
-这是一个基于Binance API的加密货币市场分析服务，通过MCP框架提供丰富的价格分析和图表生成功能。
+本模块提供了一套完整的加密货币价格分析工具，包括当前价格查询、历史数据分析、市场概况、价格预测和综合分析功能。系统采用多种技术指标和统计模型，提供专业的市场分析与预测。
 
-## 功能特点
+## 代码结构
 
-1. **价格查询**
-   - 获取单个加密货币实时价格
-   - 获取多个加密货币实时价格
-   - 查看订单簿深度数据和买卖压力分析
-
-2. **历史价格与技术分析**
-   - 获取历史K线数据并进行技术分析
-   - 支持多种技术指标：
-     - 布林带 (BOLL)
-     - 移动平均线 (MA7, MA20, MA50, MA100等)
-     - 相对强弱指标 (RSI)
-     - MACD指标
-     - KDJ随机震荡指标
-     - 抛物线转向指标 (PSAR)
-     - 能量潮指标 (OBV)
-     - 平均真实范围 (ATR)
-   - 加密货币对比分析与相关性计算
-
-3. **市场概况**
-   - 主要加密货币市场概况和市场情绪分析
-   - 不同类型加密货币板块的表现分析
-
-4. **价格预测**
-   - 基础价格预测模型
-   - 高级预测分析，包括支撑位、阻力位和趋势通道
-
-5. **图表生成**
-   - 生成价格走势图，支持多种技术指标
-   - 生成多币种对比图表
-   - 返回Base64编码图像和图表数据，方便前端展示
-
-## 项目结构
+项目结构如下：
 
 ```
 CryptocPrices/
-├── main.py              # 主程序入口
-├── README.md            # 项目说明
-├── tools/               # 工具模块目录
-│   ├── __init__.py      # 工具模块初始化
-│   ├── current_price.py # 当前价格查询工具
-│   ├── historical_price.py # 历史价格分析工具
-│   ├── market_summary.py # 市场概况工具
-│   ├── price_prediction.py # 价格预测工具
-│   └── chart_generator.py # 图表生成工具
-└── utils/               # 实用工具目录
-    ├── __init__.py      # 实用工具初始化
-    ├── client.py        # Binance客户端工具
-    ├── technical_indicators.py # 技术指标计算模块
-    ├── market_analysis.py # 市场分析工具
-    └── prediction_models.py # 预测模型工具
+├── client.py         # Binance API 客户端配置
+├── main.py           # 主入口文件
+├── README.md         # 项目说明文档
+├── run.py            # 直接运行脚本
+└── tools/            # 工具函数目录
+    ├── __init__.py   # 工具函数导出
+    ├── current_price.py # 当前价格相关工具
+    ├── history.py    # 历史价格分析工具
+    ├── market.py     # 市场概况工具
+    ├── prediction.py # 价格预测工具
+    └── comprehensive.py # 综合分析工具
 ```
 
-## 模块说明
+## 功能模块
 
-### 工具模块 (tools)
+1. **客户端配置** (client.py)
+   - Binance API 客户端初始化
+   - 自动支持测试模式（无 API 密钥时）
 
-1. **current_price.py**
-   - 获取实时价格和订单簿数据
-   - 计算买卖压力
+2. **当前价格查询** (tools/current_price.py)
+   - `get_current_price`: 获取单个加密货币当前价格
+   - `get_multiple_prices`: 批量获取多个加密货币价格
 
-2. **historical_price.py**
-   - 获取历史价格和技术指标
-   - 提供多币种对比分析
+3. **历史价格分析** (tools/history.py)
+   - `get_price_history`: 获取历史K线数据并计算技术指标，包括移动平均线、RSI和MACD等
 
-3. **market_summary.py**
-   - 市场整体概况
-   - 不同板块分析
+4. **市场概览** (tools/market.py)
+   - `get_market_summary`: 提供全面的市场分析，包括主要加密货币涨跌幅、市场情绪、BTC主导地位、市场分化程度等
+   - 分析市场整体结构、阶段和发展趋势
 
-4. **price_prediction.py**
-   - 基本和高级价格预测
-   - 支持多种预测模型
+5. **价格预测** (tools/prediction.py)
+   - `get_price_prediction`: 基于多重技术指标和统计模型进行价格预测
+   - 结合ARIMA时间序列预测和技术分析，提供更准确的预测结果
+   - 包含风险评估、趋势分析和支撑/阻力位识别
 
-5. **chart_generator.py**
-   - 价格走势图生成
-   - 对比图表生成
+6. **综合分析** (tools/comprehensive.py)
+   - `get_comprehensive_analysis`: 整合市场概览和多币种预测，提供全面的分析报告
+   - 生成市场环境评估、币种预测摘要、投资建议和特别关注点
 
-### 实用工具 (utils)
+## 技术指标
 
-1. **client.py**
-   - Binance API客户端管理
-   - 实现单例模式
+本系统使用多种专业技术指标进行分析，包括：
 
-2. **technical_indicators.py**
-   - 计算各种技术指标
-   - 包含BOLL, RSI, MACD, KDJ等
-
-3. **market_analysis.py**
-   - 趋势分析工具
-   - 支撑位和阻力位识别
-
-4. **prediction_models.py**
-   - 预测算法实现
-   - 预测结果处理
+- **移动平均线系统**: MA5, MA10, MA20, MA30, MA60, MA120及其交叉形态
+- **MACD指标**: 动量与趋势确认，金叉/死叉信号
+- **相对强弱指数(RSI)**: 超买/超卖信号识别
+- **布林带指标**: 价格通道与波动分析
+- **波动率分析**: 价格波动性与市场风险评估
+- **市场结构分析**: 多头/空头排列，牛熊市阶段判断
+- **ARIMA时间序列模型**: 结合统计建模的预测分析
 
 ## 使用方法
 
-本服务通过ChainHunter MCP框架自动加载，无需手动启动。
+有三种方式运行本服务：
 
-## API密钥设置（可选）
+### 1. 使用run.py脚本直接运行
 
-如需使用自己的Binance API密钥（非必需），请在项目根目录的`.env`文件中设置：
-
-```
-BINANCE_API_KEY=你的Binance API Key
-BINANCE_API_SECRET=你的Binance API Secret
+```bash
+cd python_backend/mcp/CryptocPrices
+python run.py
 ```
 
-注意：未设置API密钥时，将使用Binance公共API，可能存在访问限制。
+### 2. 作为Python模块导入使用
 
-## 图表功能
+```python
+# 导入MCP实例
+from python_backend.mcp.CryptocPrices.main import mcp
 
-本服务提供两种方式的图表展示：
+# 调用工具函数
+result = mcp.tools.get_current_price("BTCUSDT")
+print(result)
 
-1. **Base64编码图像**
-   - 直接生成完整的图表图像
-   - 可在前端直接嵌入显示
-   - 支持K线图、多指标和对比图
+# 获取综合分析报告
+report = mcp.tools.get_comprehensive_analysis(["BTCUSDT", "ETHUSDT", "BNBUSDT"], days=7)
+print(report)
+```
 
-2. **JSON格式数据**
-   - 提供结构化的数据点
-   - 支持前端使用图表库（如Chart.js、ECharts等）自定义渲染
-   - 包含所有技术指标的数据点
+### 3. 作为包运行（从项目根目录）
 
-### 图表示例
+```bash
+python -m python_backend.mcp.CryptocPrices.run
+```
 
-通过调用`generate_price_chart`工具可以生成多种图表：
-- 蜡烛图 + 布林带
-- 蜡烛图 + 移动平均线
-- 蜡烛图 + RSI + MACD + 成交量
-- 多币种对比图和相关性热图
+## 环境变量
 
-## 示例查询
+服务支持通过环境变量配置 Binance API 密钥：
 
-以下是通过ChainHunter助手使用本服务的一些示例问题：
+- `BINANCE_API_KEY`: Binance API Key
+- `BINANCE_API_SECRET`: Binance API Secret
 
-1. "比特币现在多少价格？"
-2. "显示以太坊30天的价格走势图"
-3. "分析比特币的布林带和MACD指标"
-4. "比较BTC、ETH和SOL过去一个月的表现"
-5. "查看比特币的支撑位和阻力位"
-6. "预测下一周以太坊的价格走势"
-7. "显示主要加密货币的市场概况"
-8. "哪个板块的加密货币表现最好？"
-9. "分析SOL币的KDJ指标"
-10. "比特币现在是超买还是超卖状态？"
+如果未设置环境变量，将使用测试模式连接 Binance API。
 
 ## 依赖项
 
-- python-binance
-- pandas
-- numpy
-- matplotlib
-- scikit-learn
-- fastmcp
+本项目依赖以下主要库：
+- python-binance: Binance API交互
+- pandas, numpy: 数据处理与计算
+- statsmodels: ARIMA模型与时间序列分析
+- fastmcp: MCP服务框架
+
+完整依赖列表请参见项目根目录的pyproject.toml文件。
 
 ## 免责声明
 
-本服务提供的价格预测和技术分析仅供参考，不构成投资建议。加密货币市场波动性大，投资决策请谨慎并进行充分研究。
+本服务提供的分析和预测仅供参考，不构成投资建议。加密货币市场波动性大，交易决策请结合多种因素并自行承担风险。
