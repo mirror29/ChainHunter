@@ -20,7 +20,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: SSH and deploy
-      uses: appleboy/ssh-action@v0.1.18  # 建议使用最新版本
+      uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.AWS_HOST }}
         username: ec2-user  # 如果你使用的是其他 Linux 发行版，可能需要修改

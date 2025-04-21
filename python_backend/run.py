@@ -25,10 +25,13 @@ deepseek_model = OpenAIChatCompletionsModel(
 async def main():
     await mcp_run_multi(
     servers_params=[
-        {"name": "coincap-mcp","command":"npx", "args": ["coincap-mcp"]},
-        {"name": "webresearch","command":"npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
+        # {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/main.py"]},
+        {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/main.py"]},
+        # {"name": "coincap-mcp","command":"npx", "args": ["coincap-mcp"]},
+        # {"name": "coincap-mcp","command":"./mcp/coincap-mcp/build/index.js", "args": [""]},
+        # {"name": "webresearch","command":"npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
     ],
-    message="访问https://openai.github.io/openai-agents-python/mcp/这个网页并截图"
+    message="sol价格"
     )
 
 async def mcp_run_multi(servers_params, message):

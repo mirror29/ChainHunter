@@ -12,8 +12,47 @@ from openai import AsyncOpenAI
 from openai.types.responses import ResponseTextDeltaEvent
 from agents.mcp import MCPServerStdio
 from contextlib import AsyncExitStack
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 load_dotenv()
+
+# 创建全局exit stack和MCP服务器实例
+global_exit_stack = AsyncExitStack()
+global_servers = {}
+global_mcp_agent = None
+
+# 创建lifespan上下文管理器(FastAPI推荐的新方式替代@app.on_event)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 在这里初始化服务
+    print("应用启动，初始化MCP服务器...")
+    try:
+        await init_mcp_servers()
+        print("MCP服务器初始化完成")
+        yield
+    finally:
+        # 在这里关闭资源
+        print("应用关闭，清理资源...")
+        global global_exit_stack, global_servers, global_mcp_agent
+        try:
+            # 清理agent引用
+            global_mcp_agent = None
+
+            # 清理服务器引用
+            if global_servers:
+                global_servers.clear()
+
+            # 关闭exit_stack，这将关闭所有服务器连接
+            if isinstance(global_exit_stack, AsyncExitStack):
+                await global_exit_stack.aclose()
+                print("所有MCP服务器已关闭")
+        except Exception as e:
+            print(f"关闭资源时出错: {str(e)}")
+        finally:
+            # 重置全局变量
+            global_exit_stack = AsyncExitStack()
+            global_servers = {}
 
 # Initialize OpenAI client
 external_client = AsyncOpenAI(
@@ -31,14 +70,14 @@ deepseek_model = OpenAIChatCompletionsModel(
 chinese_agent = Agent(
     name="Chinese agent",
     instructions="你是一个专业的区块链行业助手ChainHunte，你只能用中文进行回复。",
-    handoff_description="当用户输入文时，调用该智能体来回答用户问题。",
+    handoff_description="当用户输入中文时，调用该智能体来回答用户问题。",
     model=deepseek_model,
 )
 
 english_agent = Agent(
     name="English agent",
     instructions="你是一个专业的区块链行业助手ChainHunter，你只能用英文进行回复。",
-    handoff_description="当用户输入非英文时，调用该智能体来回答用户问题。",
+    handoff_description="当用户输入非中文时，调用该智能体来回答用户问题。",
     model=deepseek_model,
 )
 
@@ -52,8 +91,8 @@ triage_agent = Agent(
     model=deepseek_model,
 )
 
-# Create FastAPI app
-app = FastAPI(title="ChainHunter API")
+# Create FastAPI app (使用lifespan上下文管理器)
+app = FastAPI(title="ChainHunter API", lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
@@ -78,11 +117,6 @@ class ChatResponse(BaseModel):
     chatId: Optional[str] = None
     success: bool = True
 
-# 创建全局exit stack和MCP服务器实例
-global_exit_stack = AsyncExitStack()
-global_servers = {}
-global_mcp_agent = None
-
 # 初始化MCP服务器的函数
 async def init_mcp_servers():
     global global_exit_stack, global_servers, global_mcp_agent
@@ -97,8 +131,9 @@ async def init_mcp_servers():
 
             # MCP服务器参数
             servers_params = [
-                {"name": "coincap-mcp", "command": "npx", "args": ["coincap-mcp"]},
-                {"name": "webresearch", "command": "npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
+                {"name": "cryptoc-prices", "command": "python", "args": ['./mcp/CryptocPrices/main.py']},
+                # {"name": "coincap-mcp", "command": "npx", "args": ["coincap-mcp"]},
+                # {"name": "webresearch", "command": "npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
             ]
 
             # 创建并连接所有服务器
@@ -157,48 +192,6 @@ async def init_mcp_servers():
         global_exit_stack = AsyncExitStack()
         raise
 
-
-# 在后台初始化MCP服务器
-async def background_init():
-    try:
-        await init_mcp_servers()
-        print("MCP服务器后台初始化完成")
-    except Exception as e:
-        print(f"MCP服务器后台初始化失败: {str(e)}")
-
-# 应用启动时初始化MCP服务器
-@app.on_event("startup")
-async def startup_event():
-    print("应用启动，开始后台初始化MCP服务器...")
-    # 在后台初始化，不阻塞应用启动
-    asyncio.create_task(background_init())
-
-# 应用关闭时关闭所有服务器
-@app.on_event("shutdown")
-async def shutdown_event():
-    global global_exit_stack, global_servers, global_mcp_agent
-
-    print("应用关闭，清理资源...")
-    try:
-        # 清理agent引用
-        global_mcp_agent = None
-
-        # 清理服务器引用
-        if global_servers:
-            global_servers.clear()
-
-        # 关闭exit_stack，这将关闭所有服务器连接
-        if isinstance(global_exit_stack, AsyncExitStack):
-            await global_exit_stack.aclose()
-            print("所有MCP服务器已关闭")
-    except Exception as e:
-        print(f"关闭资源时出错: {str(e)}")
-    finally:
-        # 重置全局变量
-        global_exit_stack = AsyncExitStack()
-        global_servers = {}
-
-
 # 获取或初始化MCP agent
 async def get_mcp_agent():
     global global_mcp_agent
@@ -206,6 +199,9 @@ async def get_mcp_agent():
     # 如果agent已初始化，直接返回
     if global_mcp_agent is not None:
             return global_mcp_agent
+    else:
+        # 尝试初始化
+        return await init_mcp_servers()
 
 
 async def stream_response(agent, input_items, chat_id):
@@ -288,11 +284,12 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
