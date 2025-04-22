@@ -73,7 +73,7 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar pageType="app" />
+      <Navbar/>
 
       <main className="flex-1 container max-w-6xl mx-auto py-12 px-4 mt-16">
         <div className="text-center mb-12">
