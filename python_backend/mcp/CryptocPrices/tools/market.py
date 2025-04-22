@@ -1,9 +1,19 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from binance.exceptions import BinanceAPIException
-from python_backend.mcp.CryptocPrices.client import client
+
+# 使用try-except处理不同环境下的导入
+try:
+    # 作为包导入时
+    from ..client import client
+except (ImportError, ValueError):
+    # 直接运行时
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from client import client
 
 def get_market_summary() -> Dict[str, Any]:
     """

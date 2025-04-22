@@ -1,8 +1,17 @@
 from typing import Dict, Any, List
 from datetime import datetime
-from python_backend.mcp.CryptocPrices.tools.market import get_market_summary
-from python_backend.mcp.CryptocPrices.tools.prediction import get_price_prediction
-from python_backend.mcp.CryptocPrices.tools.history import get_price_history
+
+# 使用try-except处理不同环境下的导入工具模块
+try:
+    # 作为包导入时
+    from .market import get_market_summary
+    from .prediction import get_price_prediction
+    from .history import get_price_history
+except (ImportError, ValueError):
+    # 直接运行时
+    from market import get_market_summary
+    from prediction import get_price_prediction
+    from history import get_price_history
 
 def get_comprehensive_analysis(symbols: List[str] = ["BTCUSDT", "ETHUSDT"], days: int = 7) -> Dict[str, Any]:
     """

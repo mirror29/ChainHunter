@@ -26,5 +26,8 @@ RUN uv pip install --system .
 # 复制应用代码
 COPY . .
 
+# 确保Python模块可以被正确导入
+ENV PYTHONPATH="/app:${PYTHONPATH}"
+
 # 运行应用
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
