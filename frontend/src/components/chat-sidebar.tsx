@@ -2,7 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Plus, Settings, LogOut, Trash2 } from "lucide-react";
+import {
+  MessageSquare,
+  Plus,
+  Settings,
+  LogOut,
+  Trash2,
+  Timer,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -11,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Link from "next/link";
+import { Progress } from "@/components/ui/progress";
 
 interface ChatSession {
   id: string;
@@ -29,6 +37,9 @@ interface ChatSidebarProps {
   userEmail: string;
   userName?: string;
   onDeleteChat?: (id: string) => void;
+  userDailyUsage?: number;
+  userMaxDailyUsage?: number;
+  userIsPremium?: boolean;
 }
 
 export function ChatSidebar({
@@ -40,6 +51,9 @@ export function ChatSidebar({
   userEmail,
   userName = "User",
   onDeleteChat,
+  userDailyUsage,
+  userMaxDailyUsage,
+  userIsPremium,
 }: ChatSidebarProps) {
   const userInitial = userName
     ? userName.charAt(0).toUpperCase()
@@ -53,6 +67,27 @@ export function ChatSidebar({
       onDeleteChat(id);
     }
   };
+
+  const hasUsageData =
+    typeof userDailyUsage === "number" && typeof userMaxDailyUsage === "number";
+
+  // 计算剩余次数
+  const remainingUsage = hasUsageData
+    ? Math.max(0, (userMaxDailyUsage || 0) - (userDailyUsage || 0))
+    : 0;
+
+  // 判断是否低于阈值
+  const isWarning =
+    hasUsageData && remainingUsage <= (userMaxDailyUsage || 0) * 0.2;
+
+  // 计算使用百分比
+  const usedPercentage = hasUsageData
+    ? Math.round(
+        (((userMaxDailyUsage || 0) - remainingUsage) /
+          (userMaxDailyUsage || 1)) *
+          100
+      )
+    : 0;
 
   return (
     <div className="flex flex-col h-full bg-muted/30">
@@ -199,11 +234,42 @@ export function ChatSidebar({
             >
               <Settings className="h-4 w-4" />
             </Button>
-            {/* <Settings className="h-4 w-4 text-muted-foreground" /> */}
           </PopoverTrigger>
-          <PopoverContent className="w-56 shadow-md border-0 p-0" align="end">
+          <PopoverContent className="w-56 shadow-md border-0 p-2" align="end">
             <div>
               <div className="space-y-2">
+                {hasUsageData && (
+                  <Button
+                    variant="outline"
+                    className="px-3 py-3 border-b flex items-center gap-2 border-0 cursor-pointer w-full p-2"
+                  >
+                    <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-sm">今日剩余次数</span>
+                        <span
+                          className={
+                            isWarning
+                              ? "text-amber-600 dark:text-amber-400"
+                              : ""
+                          }
+                        >
+                          {remainingUsage}/{userMaxDailyUsage}
+                        </span>
+                      </div>
+                      <Progress
+                        value={usedPercentage}
+                        className="h-1.5"
+                        indicatorClassName={
+                          isWarning
+                            ? "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
+                            : "bg-gradient-to-r from-primary via-blue-500 to-cyan-400"
+                        }
+                      />
+                    </div>
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-2 border-0 cursor-pointer"

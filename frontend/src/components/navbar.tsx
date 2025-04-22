@@ -14,6 +14,7 @@ import { useTheme } from "next-themes";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { ChainHunterLogo } from "@/components/ui/chain-hunter-logo";
 
 interface NavbarProps {
   pageType?: "home" | "login" | "chat";
@@ -65,8 +66,7 @@ export function Navbar({ pageType = "home" }: NavbarProps) {
   ];
 
   // 根据页面类型选择导航项
-  const navigationItems =
-    pageType === "home" ? homeNavigationItems : [];
+  const navigationItems = pageType === "home" ? homeNavigationItems : [];
 
   return (
     <header
@@ -79,31 +79,10 @@ export function Navbar({ pageType = "home" }: NavbarProps) {
     >
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold flex items-center gap-2">
-          <LogoIcon width={36} height={36} lightMode={isLightMode} />
-          <div className="flex items-baseline">
-            <div className="relative">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600">
-                Chain
-              </span>
-              <motion.div
-                className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600"
-                animate={{ width: "100%" }}
-                transition={{
-                  duration: 1.5,
-                  delay: 0.5,
-                  ease: "easeOut",
-                }}
-              />
-            </div>
-            <motion.span
-              className="dark:text-slate-200"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1 }}
-            >
-              Hunter
-            </motion.span>
-          </div>
+          <ChainHunterLogo
+            size={pageType === "home" ? "md" : "sm"}
+            lightMode={isLightMode}
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -153,28 +132,7 @@ export function Navbar({ pageType = "home" }: NavbarProps) {
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-border">
               <div className="text-2xl font-bold flex items-center justify-center gap-2">
-                <div className="relative">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600">
-                    Chain
-                  </span>
-                  <motion.div
-                    className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600"
-                    animate={{ width: "100%" }}
-                    transition={{
-                      duration: 1.5,
-                      delay: 0.5,
-                      ease: "easeOut",
-                    }}
-                  />
-                </div>
-                <motion.span
-                  className="dark:text-slate-200"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1 }}
-                >
-                  Hunter
-                </motion.span>
+                <ChainHunterLogo size="md" lightMode={isLightMode} />
               </div>
             </div>
 

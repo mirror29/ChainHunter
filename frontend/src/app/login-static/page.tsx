@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
+import { ChainHunterLogo } from "@/components/ui/chain-hunter-logo";
 
 // 简化的登录页面，用于静态生成
 export default function StaticLoginPage() {
@@ -14,9 +15,9 @@ export default function StaticLoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <Card className="w-full max-w-md mx-4 shadow-lg border-0">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            ChainHunter
-          </CardTitle>
+          <div className="flex justify-center">
+            <ChainHunterLogo size="md" />
+          </div>
           <CardDescription className="text-center">
             请登录以使用 ChainHunter AI 助手
           </CardDescription>
