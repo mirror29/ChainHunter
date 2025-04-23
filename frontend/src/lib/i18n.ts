@@ -287,6 +287,84 @@ export const translations: Translations = {
     en: "All rights reserved.",
     zh: "保留所有权利。",
   },
+
+  // Payment page
+  "payment.title": {
+    en: "Upgrade Your ChainHunter Experience",
+    zh: "升级您的 ChainHunter 使用体验",
+  },
+  "payment.subtitle": {
+    en: "Choose a membership plan that suits you and enjoy unlimited conversations and more advanced features",
+    zh: "选择适合您的会员计划，享受无限对话和更多高级功能",
+  },
+  "payment.monthly.name": {
+    en: "Monthly Membership",
+    zh: "月度会员",
+  },
+  "payment.yearly.name": {
+    en: "Annual Membership",
+    zh: "年度会员",
+  },
+  "payment.lifetime.name": {
+    en: "Lifetime Membership",
+    zh: "终身会员",
+  },
+  "payment.monthly.description": {
+    en: "30 days of unlimited use, priority access to new features",
+    zh: "30天无限使用，优先获得最新功能",
+  },
+  "payment.yearly.description": {
+    en: "365 days of unlimited use, unrestricted access to all features",
+    zh: "365天无限使用，全部功能无限制",
+  },
+  "payment.lifetime.description": {
+    en: "One-time payment, lifetime unlimited use",
+    zh: "一次付费，终身无限使用",
+  },
+  "payment.feature.unlimited": {
+    en: "Unlimited daily conversations",
+    zh: "每天无限对话",
+  },
+  "payment.feature.priority": {
+    en: "Priority response",
+    zh: "优先响应",
+  },
+  "payment.feature.advanced": {
+    en: "Priority experience of advanced features",
+    zh: "高级功能优先体验",
+  },
+  "payment.feature.support": {
+    en: "Dedicated customer support",
+    zh: "专属客服支持",
+  },
+  "payment.feature.report": {
+    en: "Data analysis reports",
+    zh: "数据分析报告",
+  },
+  "payment.feature.vip": {
+    en: "Community VIP status",
+    zh: "社区VIP身份",
+  },
+  "payment.most.popular": {
+    en: "Most Popular",
+    zh: "最受欢迎",
+  },
+  "payment.buy.now": {
+    en: "Buy Now",
+    zh: "立即购买",
+  },
+  "payment.processing": {
+    en: "Processing...",
+    zh: "处理中...",
+  },
+  "payment.select.first": {
+    en: "Please select a membership plan first",
+    zh: "请先选择一个会员计划",
+  },
+  "payment.support.message": {
+    en: "If you have any questions, please contact our customer support",
+    zh: "如有任何问题，请联系我们的客服支持",
+  },
 };
 
 // Create a store to manage the current locale

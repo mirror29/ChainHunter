@@ -27,6 +27,7 @@ import {
   Database,
   Coins,
   LineChart,
+  Square,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
@@ -267,6 +268,19 @@ export default function ChatPage() {
     undefined
   );
 
+  // 添加流式响应控制状态
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamControllerRef = useRef<AbortController | null>(null);
+
+  // 处理停止回复的函数
+  const handleStopResponse = () => {
+    if (streamControllerRef.current) {
+      streamControllerRef.current.abort();
+      streamControllerRef.current = null;
+      setIsStreaming(false);
+    }
+  };
+
   // 加载用户使用情况函数
   const loadUserUsage = async () => {
     try {
@@ -339,6 +353,10 @@ export default function ChatPage() {
     setShowWelcome(false);
 
     try {
+      // 创建 AbortController 用于可能的中断
+      streamControllerRef.current = new AbortController();
+      setIsStreaming(true);
+
       // 首先更新使用次数并检查是否超出限制
       const usageResponse = await fetch("/api/user/updateUsage", {
         method: "POST",
@@ -403,6 +421,7 @@ export default function ChatPage() {
           chatHash: currentChatHash,
           stream: true,
         }),
+        signal: streamControllerRef.current.signal, // 添加中断信号
       });
 
       if (!response.ok) {
@@ -558,26 +577,32 @@ export default function ChatPage() {
           console.error("解析chunk错误:", chunk, e);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
       // 更新消息显示错误
-      setMessages((prev) =>
-        prev.map((msg) => {
-          // 确保使用在 catch 块之外定义的 assistantMessageId
-          const assistantMessageId = prev.find(
-            (m) => m.role === "assistant" && m.content === "正在思考中..."
-          )?.id;
-          if (msg.id === assistantMessageId) {
-            return {
-              ...msg,
-              content: "很抱歉，处理您的请求时出现错误。请稍后再试。",
-            };
-          }
-          return msg;
-        })
+      const assistantMsg = messages.find(
+        (m) =>
+          m.role === "assistant" &&
+          (m.content === "正在思考中..." || m.content === "")
       );
+
+      if (assistantMsg) {
+        // 如果是中断错误，显示中断消息
+        const errorMessage =
+          error.name === "AbortError"
+            ? "回复已被用户中断"
+            : "很抱歉，处理您的请求时出现错误。请稍后再试。";
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsg.id ? { ...msg, content: errorMessage } : msg
+          )
+        );
+      }
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      streamControllerRef.current = null;
     }
   };
 
@@ -989,6 +1014,7 @@ export default function ChatPage() {
                         handleSendMessage();
                       }
                     }}
+                    disabled={isStreaming}
                   />
                 ) : (
                   <Textarea
@@ -1002,17 +1028,30 @@ export default function ChatPage() {
                         handleSendMessage();
                       }
                     }}
+                    disabled={isStreaming}
                   />
                 )}
                 <div className="absolute bottom-2 right-2 flex gap-1">
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md cursor-pointer"
-                    disabled={!input.trim() || isLoading}
-                  >
-                    <SendHorizontal className="h-4 w-4 text-white" />
-                  </Button>
+                  {isStreaming ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 shadow-sm hover:shadow-md cursor-pointer"
+                      onClick={handleStopResponse}
+                      title="终止回复"
+                    >
+                      <Square className="h-4 w-4 text-white" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md cursor-pointer"
+                      disabled={!input.trim() || isLoading}
+                    >
+                      <SendHorizontal className="h-4 w-4 text-white" />
+                    </Button>
+                  )}
                 </div>
               </div>
               <input

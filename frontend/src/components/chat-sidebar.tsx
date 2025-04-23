@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { useRouter } from "next/navigation";
 
 interface ChatSession {
   id: string;
@@ -61,6 +62,8 @@ export function ChatSidebar({
     ? userEmail.charAt(0).toUpperCase()
     : "U";
 
+  const router = useRouter();
+
   const handleDeleteChat = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDeleteChat) {
@@ -88,6 +91,11 @@ export function ChatSidebar({
           100
       )
     : 0;
+
+  // 处理点击剩余次数跳转到付费页面
+  const handleUpgradeClick = () => {
+    router.push("/payment");
+  };
 
   return (
     <div className="flex flex-col h-full bg-muted/30">
@@ -239,35 +247,31 @@ export function ChatSidebar({
             <div>
               <div className="space-y-2">
                 {hasUsageData && (
-                  <Button
-                    variant="outline"
-                    className="px-3 py-3 border-b flex items-center gap-2 border-0 cursor-pointer w-full p-2"
+                  <div
+                    onClick={handleUpgradeClick}
+                    className="flex flex-col px-3 py-2 gap-2 border-0 cursor-pointer w-full"
                   >
-                    <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between w-full mb-1">
-                        <span className="text-sm">今日剩余次数</span>
-                        <span
-                          className={
-                            isWarning
-                              ? "text-amber-600 dark:text-amber-400"
-                              : ""
-                          }
-                        >
-                          {remainingUsage}/{userMaxDailyUsage}
-                        </span>
-                      </div>
-                      <Progress
-                        value={usedPercentage}
-                        className="h-1.5"
-                        indicatorClassName={
-                          isWarning
-                            ? "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
-                            : "bg-gradient-to-r from-primary via-blue-500 to-cyan-400"
-                        }
-                      />
+                    <div
+                      className="flex justify-between items-center mb-1 text-xs cursor-pointer hover:text-primary transition-colors"
+                      title="点击升级套餐"
+                    >
+                      <span>今日剩余次数:</span>
+                      <span
+                        className={isWarning ? "text-red-500 font-bold" : ""}
+                      >
+                        {remainingUsage} / {userMaxDailyUsage}
+                      </span>
                     </div>
-                  </Button>
+                    <Progress
+                      value={usedPercentage}
+                      className="h-1"
+                      indicatorClassName={
+                        isWarning
+                          ? "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
+                          : "bg-gradient-to-r from-primary via-blue-500 to-cyan-400"
+                      }
+                    />
+                  </div>
                 )}
 
                 <Button

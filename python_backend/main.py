@@ -69,7 +69,7 @@ deepseek_model = OpenAIChatCompletionsModel(
 
 chinese_agent = Agent(
     name="Chinese agent",
-    instructions="你是一个专业的区块链行业助手ChainHunte，你只能用中文进行回复。",
+    instructions="你是一个专业的区块链行业助手ChainHunter，你只能用中文进行回复。",
     handoff_description="当用户输入中文时，调用该智能体来回答用户问题。",
     model=deepseek_model,
 )
@@ -78,16 +78,6 @@ english_agent = Agent(
     name="English agent",
     instructions="你是一个专业的区块链行业助手ChainHunter，你只能用英文进行回复。",
     handoff_description="当用户输入非中文时，调用该智能体来回答用户问题。",
-    model=deepseek_model,
-)
-
-triage_agent = Agent(
-    name="分诊智能体",
-    instructions="""你是一个专业的区块链行业助手ChainHunter，
-    可以帮助用户进行合约自动化交易，市场机会发现套利和量化交易，
-    还有币圈项目背调（包括项目背景，融资情况，投资建议等），链上监控等相关功能，
-    根据请求的语言将其交接给合适的智能体。""",
-    handoffs=[chinese_agent, english_agent],
     model=deepseek_model,
 )
 
