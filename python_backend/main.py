@@ -22,6 +22,10 @@ global_exit_stack = AsyncExitStack()
 global_servers = {}
 global_mcp_agent = None
 
+# 添加全局锁来防止并发初始化问题
+import asyncio
+_init_lock = asyncio.Lock()
+
 # 创建lifespan上下文管理器(FastAPI推荐的新方式替代@app.on_event)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -121,9 +125,19 @@ async def init_mcp_servers():
 
             # MCP服务器参数
             servers_params = [
-                {"name": "cryptoc-prices", "command": "python", "args": ['./mcp/CryptocPrices/run.py']},
-                # {"name": "coincap-mcp", "command": "npx", "args": ["coincap-mcp"]},
-                # {"name": "webresearch", "command": "npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
+                {
+                    "name": "cryptoc-prices", 
+                    "command": "python", 
+                    "args": ['./mcp/CryptocPrices/run.py'],
+                    "description": "加密货币价格分析和预测服务"
+                },
+                # 可以添加更多MCP服务器
+                # {
+                #     "name": "defi-analyzer", 
+                #     "command": "python", 
+                #     "args": ['./mcp/DefiAnalyzer/run.py'],
+                #     "description": "DeFi协议分析服务"
+                # },
             ]
 
             # 创建并连接所有服务器
@@ -185,13 +199,15 @@ async def init_mcp_servers():
 # 获取或初始化MCP agent
 async def get_mcp_agent():
     global global_mcp_agent
-
-    # 如果agent已初始化，直接返回
-    if global_mcp_agent is not None:
+    
+    # 使用锁防止并发初始化
+    async with _init_lock:
+        # 如果agent已初始化，直接返回
+        if global_mcp_agent is not None:
             return global_mcp_agent
-    else:
-        # 尝试初始化
-        return await init_mcp_servers()
+        else:
+            # 尝试初始化
+            return await init_mcp_servers()
 
 
 async def stream_response(agent, input_items, chat_id):

@@ -122,32 +122,32 @@ export const translations: Translations = {
     zh: "我们正在稳步推进 ChainHunter 的开发，遵循明确的路线图，为用户提供最先进的区块链交易和分析工具。",
   },
   "roadmap.q1.title": {
-    en: "Q1 2024",
-    zh: "2024年第一季度",
+    en: "Q1 2025",
+    zh: "2025年第一季度",
   },
   "roadmap.q1.description": {
     en: "Project inception and core architecture design",
     zh: "项目启动和核心架构设计",
   },
   "roadmap.q2.title": {
-    en: "Q2 2024",
-    zh: "2024年第二季度",
+    en: "Q2 2025",
+    zh: "2025年第二季度",
   },
   "roadmap.q2.description": {
     en: "Beta release with automated trading capabilities",
     zh: "带有自动化交易功能的测试版发布",
   },
   "roadmap.q3.title": {
-    en: "Q3 2024",
-    zh: "2024年第三季度",
+    en: "Q3 2025",
+    zh: "2025年第三季度",
   },
   "roadmap.q3.description": {
     en: "Integration of market analysis and arbitrage features",
     zh: "市场分析和套利功能的整合",
   },
   "roadmap.q4.title": {
-    en: "Q4 2024",
-    zh: "2024年第四季度",
+    en: "Q4 2025",
+    zh: "2025年第四季度",
   },
   "roadmap.q4.description": {
     en: "Full launch with comprehensive monitoring and intelligence tools",
