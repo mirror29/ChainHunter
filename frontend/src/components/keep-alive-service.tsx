@@ -1,45 +1,46 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Play, Pause, Activity, Clock, Database } from 'lucide-react'
+import { useState, useEffect, useRef } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Activity, Clock, Database } from "lucide-react";
 
 interface KeepAliveServiceProps {
-  className?: string
+  className?: string;
 }
 
 export function KeepAliveService({ className }: KeepAliveServiceProps) {
-  const [isActive, setIsActive] = useState(false)
-  const [interval, setInterval] = useState(6) // 6小时间隔
-  const [lastPing, setLastPing] = useState<Date | null>(null)
-  const [nextPing, setNextPing] = useState<Date | null>(null)
-  const [pingCount, setPingCount] = useState(0)
-  const [status, setStatus] = useState<'idle' | 'running' | 'error'>('idle')
-  
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const nextPingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isActive, setIsActive] = useState(false);
+  const [interval, setInterval] = useState(6); // 6小时间隔
+  const [lastPing, setLastPing] = useState<Date | null>(null);
+  const [nextPing, setNextPing] = useState<Date | null>(null);
+  const [pingCount, setPingCount] = useState(0);
+  const [status, setStatus] = useState<"idle" | "running" | "error">("idle");
+
+  // 兼容浏览器和Node环境的定时器类型
+  const intervalRef = useRef<number | null>(null);
+  const nextPingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     // 从localStorage恢复设置
-    const savedSettings = localStorage.getItem('keepAliveSettings')
+    const savedSettings = localStorage.getItem("keepAliveSettings");
     if (savedSettings) {
       try {
-        const settings = JSON.parse(savedSettings)
-        setIsActive(settings.isActive || false)
-        setInterval(settings.interval || 6)
-        setPingCount(settings.pingCount || 0)
-        
+        const settings = JSON.parse(savedSettings);
+        setIsActive(settings.isActive || false);
+        setInterval(settings.interval || 6);
+        setPingCount(settings.pingCount || 0);
+
         if (settings.lastPing) {
-          setLastPing(new Date(settings.lastPing))
+          setLastPing(new Date(settings.lastPing));
         }
       } catch (error) {
-        console.error('恢复保活设置失败:', error)
+        console.error("恢复保活设置失败:", error);
       }
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     // 保存设置到localStorage
@@ -47,147 +48,155 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
       isActive,
       interval,
       pingCount,
-      lastPing: lastPing?.toISOString()
-    }
-    localStorage.setItem('keepAliveSettings', JSON.stringify(settings))
-  }, [isActive, interval, pingCount, lastPing])
+      lastPing: lastPing?.toISOString(),
+    };
+    localStorage.setItem("keepAliveSettings", JSON.stringify(settings));
+  }, [isActive, interval, pingCount, lastPing]);
 
   useEffect(() => {
     if (isActive) {
-      startKeepAlive()
+      startKeepAlive();
     } else {
-      stopKeepAlive()
+      stopKeepAlive();
     }
 
-    return () => stopKeepAlive()
-  }, [isActive, interval])
+    return () => stopKeepAlive();
+  }, [isActive, interval]);
 
   useEffect(() => {
     // 更新下次ping时间
     if (isActive && lastPing) {
-      const next = new Date(lastPing.getTime() + interval * 60 * 60 * 1000)
-      setNextPing(next)
-      
+      const next = new Date(lastPing.getTime() + interval * 60 * 60 * 1000);
+      setNextPing(next);
+
       // 设置下次ping的定时器
-      const timeUntilNext = next.getTime() - Date.now()
+      const timeUntilNext = next.getTime() - Date.now();
       if (timeUntilNext > 0) {
-        nextPingTimeoutRef.current = setTimeout(() => {
-          performKeepAlive()
-        }, timeUntilNext)
+        nextPingTimeoutRef.current = window.setTimeout(() => {
+          performKeepAlive();
+        }, timeUntilNext);
       }
     } else {
-      setNextPing(null)
+      setNextPing(null);
     }
 
     return () => {
       if (nextPingTimeoutRef.current) {
-        clearTimeout(nextPingTimeoutRef.current)
-        nextPingTimeoutRef.current = null
+        clearTimeout(nextPingTimeoutRef.current);
+        nextPingTimeoutRef.current = null;
       }
-    }
-  }, [lastPing, interval, isActive])
+    };
+  }, [lastPing, interval, isActive]);
 
+  /**
+   * 启动保活服务
+   * @returns {void}
+   */
   const startKeepAlive = () => {
-    setStatus('running')
-    
-    // 立即执行一次
-    performKeepAlive()
-    
-    // 设置定期执行
-    intervalRef.current = setInterval(() => {
-      performKeepAlive()
-    }, interval * 60 * 60 * 1000) // 转换为毫秒
-  }
+    setStatus("running");
 
+    // 立即执行一次
+    performKeepAlive();
+
+    // 设置定期执行
+    intervalRef.current = window.setInterval(() => {
+      performKeepAlive();
+    }, interval * 60 * 60 * 1000);
+  };
+
+  /**
+   * 停止保活服务
+   * @returns {void}
+   */
   const stopKeepAlive = () => {
-    setStatus('idle')
-    
+    setStatus("idle");
+
     if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-    
+
     if (nextPingTimeoutRef.current) {
-      clearTimeout(nextPingTimeoutRef.current)
-      nextPingTimeoutRef.current = null
+      clearTimeout(nextPingTimeoutRef.current);
+      nextPingTimeoutRef.current = null;
     }
-  }
+  };
 
   const performKeepAlive = async () => {
     try {
-      setStatus('running')
-      
+      setStatus("running");
+
       // 执行数据库保活请求
-      const response = await fetch('/api/database/keepalive')
-      
+      const response = await fetch("/api/database/keepalive");
+
       if (response.ok) {
-        setLastPing(new Date())
-        setPingCount(prev => prev + 1)
-        setStatus('running')
-        
-        console.log('数据库保活成功')
+        setLastPing(new Date());
+        setPingCount((prev) => prev + 1);
+        setStatus("running");
+
+        console.log("数据库保活成功");
       } else {
-        console.error('数据库保活失败:', response.status)
-        setStatus('error')
+        console.error("数据库保活失败:", response.status);
+        setStatus("error");
       }
     } catch (error) {
-      console.error('执行数据库保活时出错:', error)
-      setStatus('error')
+      console.error("执行数据库保活时出错:", error);
+      setStatus("error");
     }
-  }
+  };
 
   const handleToggle = (checked: boolean) => {
-    setIsActive(checked)
-  }
+    setIsActive(checked);
+  };
 
   const handleIntervalChange = (newInterval: number) => {
-    setInterval(newInterval)
-    
+    setInterval(newInterval);
+
     // 如果正在运行，重启服务以应用新间隔
     if (isActive) {
-      stopKeepAlive()
-      setTimeout(() => startKeepAlive(), 100)
+      stopKeepAlive();
+      setTimeout(() => startKeepAlive(), 100);
     }
-  }
+  };
 
   const getStatusColor = () => {
     switch (status) {
-      case 'running':
-        return 'bg-green-100 text-green-800'
-      case 'error':
-        return 'bg-red-100 text-red-800'
+      case "running":
+        return "bg-green-100 text-green-800";
+      case "error":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800'
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getStatusText = () => {
     switch (status) {
-      case 'running':
-        return isActive ? '运行中' : '已停止'
-      case 'error':
-        return '错误'
+      case "running":
+        return isActive ? "运行中" : "已停止";
+      case "error":
+        return "错误";
       default:
-        return '空闲'
+        return "空闲";
     }
-  }
+  };
 
   const formatTimeRemaining = () => {
-    if (!nextPing) return null
-    
-    const now = Date.now()
-    const remaining = nextPing.getTime() - now
-    
-    if (remaining <= 0) return '即将执行'
-    
-    const hours = Math.floor(remaining / (1000 * 60 * 60))
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
-    
+    if (!nextPing) return null;
+
+    const now = Date.now();
+    const remaining = nextPing.getTime() - now;
+
+    if (remaining <= 0) return "即将执行";
+
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
     if (hours > 0) {
-      return `${hours}小时${minutes}分钟`
+      return `${hours}小时${minutes}分钟`;
     }
-    return `${minutes}分钟`
-  }
+    return `${minutes}分钟`;
+  };
 
   return (
     <Card className={className}>
@@ -197,12 +206,10 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
             <Database className="h-5 w-5" />
             数据库保活服务
           </div>
-          <Badge className={getStatusColor()}>
-            {getStatusText()}
-          </Badge>
+          <Badge className={getStatusColor()}>{getStatusText()}</Badge>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* 开关控制 */}
         <div className="flex items-center justify-between">
@@ -212,10 +219,7 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
               定期ping数据库以防止暂停
             </div>
           </div>
-          <Switch
-            checked={isActive}
-            onCheckedChange={handleToggle}
-          />
+          <Switch checked={isActive} onCheckedChange={handleToggle} />
         </div>
 
         {/* 间隔设置 */}
@@ -225,7 +229,7 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
             {[3, 6, 12, 24].map((hours) => (
               <Button
                 key={hours}
-                variant={interval === hours ? 'default' : 'outline'}
+                variant={interval === hours ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleIntervalChange(hours)}
                 disabled={isActive}
@@ -245,11 +249,11 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
             <div className="text-xs text-gray-500">总计ping次数</div>
             <div className="text-lg font-semibold">{pingCount}</div>
           </div>
-          
+
           <div className="space-y-1">
             <div className="text-xs text-gray-500">上次执行</div>
             <div className="text-sm">
-              {lastPing ? lastPing.toLocaleString() : '从未执行'}
+              {lastPing ? lastPing.toLocaleString() : "从未执行"}
             </div>
           </div>
         </div>
@@ -273,13 +277,13 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
             variant="outline"
             size="sm"
             onClick={performKeepAlive}
-            disabled={status === 'running' && isActive}
+            disabled={status === "running" && isActive}
             className="flex-1"
           >
             <Activity className="h-4 w-4 mr-2" />
             立即执行
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -291,7 +295,7 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
         </div>
 
         {/* 状态信息 */}
-        {status === 'error' && (
+        {status === "error" && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <div className="text-sm text-red-800">
               保活服务遇到错误，请检查网络连接和数据库状态
@@ -300,5 +304,5 @@ export function KeepAliveService({ className }: KeepAliveServiceProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

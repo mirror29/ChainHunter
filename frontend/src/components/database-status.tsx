@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Database, Wifi, WifiOff, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Database, WifiOff, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 
 interface DatabaseStatus {
   status: 'healthy' | 'error'
@@ -77,7 +76,6 @@ export function DatabaseStatus({ className, showDetails = false }: DatabaseStatu
     try {
       setLoading(true)
       const response = await fetch('/api/database/keepalive', { method: 'POST' })
-      const data = await response.json()
       
       if (response.ok) {
         // 保活成功后重新检查状态
@@ -291,7 +289,7 @@ export function DatabaseStatus({ className, showDetails = false }: DatabaseStatu
                 <div className="text-sm text-red-600 mt-1">{status.error}</div>
                 {status.isPaused && (
                   <div className="text-xs text-red-500 mt-2">
-                    数据库可能已暂停，请检查Supabase控制台或点击"激活数据库"按钮
+                    数据库可能已暂停，请检查Supabase控制台或点击&quot;激活数据库&quot;按钮
                   </div>
                 )}
               </div>

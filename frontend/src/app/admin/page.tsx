@@ -31,7 +31,7 @@ export default function AdminPage() {
         setStatus('错误: ' + data.error)
       }
       setLastChecked(new Date())
-    } catch (error) {
+    } catch {
       setStatus('连接失败')
     } finally {
       setLoading(false)
@@ -42,7 +42,7 @@ export default function AdminPage() {
     try {
       setLoading(true)
       const response = await fetch('/api/database/keepalive', { method: 'POST' })
-      const data = await response.json()
+      await response.json()
       
       if (response.ok) {
         setStatus('保活成功')
@@ -50,7 +50,7 @@ export default function AdminPage() {
         setStatus('保活失败')
       }
       setLastChecked(new Date())
-    } catch (error) {
+    } catch {
       setStatus('保活执行失败')
     } finally {
       setLoading(false)
