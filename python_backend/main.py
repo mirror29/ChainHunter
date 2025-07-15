@@ -131,6 +131,12 @@ async def init_mcp_servers():
                     "args": ['./mcp/CryptocPrices/run.py'],
                     "description": "加密货币价格分析和预测服务"
                 },
+                {
+                    "name": "trading-signals", 
+                    "command": "python", 
+                    "args": ['./mcp/TradingSignals/run.py'],
+                    "description": "交易信号分析和套利机会检测服务"
+                },
                 # 可以添加更多MCP服务器
                 # {
                 #     "name": "defi-analyzer", 
@@ -163,7 +169,13 @@ async def init_mcp_servers():
                 "name": "ChainHunter区块链助手",
                 "instructions":"""你是一个专业的区块链行业助手ChainHunter，
                 可以帮助用户进行合约自动化交易，市场机会发现套利和量化交易，
-                还有币圈项目背调（包括项目背景，融资情况，投资建议等），链上监控等相关功能，
+                还有币圈项目背调（包括项目背景，融资情况，投资建议等），链上监控等相关功能。
+                
+                现在你还具备了交易信号分析能力：
+                - 可以分析多个交易对的技术指标并生成买入/卖出信号
+                - 可以检测跨交易所的套利机会
+                - 可以查看历史交易信号的表现统计
+                
                 根据请求的语言将其交接给合适的智能体。""",
                 "handoffs":[chinese_agent, english_agent],
             }

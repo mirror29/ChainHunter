@@ -1,0 +1,130 @@
+name: Database Keep-Alive
+
+on:
+  schedule:
+    # 每6小时执行一次保活任务 (UTC时间)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  keep-database-alive:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Database Keep-Alive Check
+      run: |
+        echo "Starting database keep-alive check..."
+        echo "Timestamp: $(date)"
+        
+        # 从环境变量获取应用URL，如果没有则使用默认值
+        APP_URL="${{ secrets.APP_URL || 'https://your-app-domain.com' }}"
+        
+        echo "Pinging database via: $APP_URL/api/database/keepalive"
+        
+        # 执行保活请求
+        response=$(curl -s -w "\n%{http_code}" "$APP_URL/api/database/keepalive")
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | head -n -1)
+        
+        echo "HTTP Status Code: $http_code"
+        echo "Response Body: $body"
+        
+        # 检查响应状态
+        if [ "$http_code" -eq 200 ]; then
+          echo "✅ Database keep-alive successful"
+          
+          # 尝试执行数据库预热
+          echo "Executing database warmup..."
+          warmup_response=$(curl -s -X POST -w "\n%{http_code}" "$APP_URL/api/database/keepalive")
+          warmup_code=$(echo "$warmup_response" | tail -n1)
+          warmup_body=$(echo "$warmup_response" | head -n -1)
+          
+          echo "Warmup HTTP Status: $warmup_code"
+          echo "Warmup Response: $warmup_body"
+          
+          if [ "$warmup_code" -eq 200 ]; then
+            echo "✅ Database warmup successful"
+          else
+            echo "⚠️ Database warmup failed but basic keep-alive worked"
+          fi
+        else
+          echo "❌ Database keep-alive failed"
+          echo "This might indicate the database is paused or the application is down"
+          exit 1
+        fi
+        
+    - name: Check Database Status
+      if: always()
+      run: |
+        echo "Checking detailed database status..."
+        APP_URL="${{ secrets.APP_URL || 'https://your-app-domain.com' }}"
+        
+        status_response=$(curl -s -w "\n%{http_code}" "$APP_URL/api/database/status")
+        status_code=$(echo "$status_response" | tail -n1)
+        status_body=$(echo "$status_response" | head -n -1)
+        
+        echo "Status HTTP Code: $status_code"
+        echo "Status Response: $status_body"
+        
+        # 解析响应并输出关键信息
+        if command -v jq >/dev/null 2>&1; then
+          echo "Database Statistics:"
+          echo "$status_body" | jq -r '.statistics // "No statistics available"'
+          
+          echo "Activity Information:"
+          echo "$status_body" | jq -r '.activity // "No activity information"'
+          
+          echo "Recommendations:"
+          echo "$status_body" | jq -r '.recommendations // "No recommendations"'
+        else
+          echo "Full status response: $status_body"
+        fi
+        
+    - name: Notify on Failure
+      if: failure()
+      run: |
+        echo "Database keep-alive failed. Consider the following actions:"
+        echo "1. Check if the Supabase database is paused in the dashboard"
+        echo "2. Verify the application is deployed and accessible"
+        echo "3. Check if the API endpoints are working correctly"
+        echo "4. Review Supabase logs for any connection issues"
+        
+        # 如果设置了通知webhook，可以发送告警
+        if [ -n "${{ secrets.ALERT_WEBHOOK }}" ]; then
+          curl -X POST "${{ secrets.ALERT_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "text": "🚨 ChainHunter Database Keep-Alive Failed",
+              "attachments": [{
+                "color": "danger",
+                "title": "Database Keep-Alive Alert",
+                "text": "The scheduled database keep-alive task has failed. Please check the database status.",
+                "fields": [
+                  {"title": "Time", "value": "'$(date)'", "short": true},
+                  {"title": "Repository", "value": "${{ github.repository }}", "short": true}
+                ]
+              }]
+            }'
+        fi
+
+  # 额外的保活任务，在不同时间执行
+  additional-keep-alive:
+    runs-on: ubuntu-latest
+    needs: keep-database-alive
+    if: always()
+    
+    steps:
+    - name: Secondary Keep-Alive
+      run: |
+        echo "Executing secondary keep-alive check..."
+        sleep 30  # 等待30秒
+        
+        APP_URL="${{ secrets.APP_URL || 'https://your-app-domain.com' }}"
+        
+        # 再次执行保活请求
+        curl -s "$APP_URL/api/database/keepalive" || echo "Secondary keep-alive failed, but this is not critical"
+        
+        echo "Secondary keep-alive completed"

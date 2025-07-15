@@ -39,19 +39,20 @@ model Session {
 
 // 用户信息
 model User {
-    id            String    @id @default(cuid()) // 唯一标识符
-    name          String? // 用户名称
-    email         String?   @unique // 用户邮箱
-    emailVerified DateTime? // 邮箱验证时间
-    password      String // 密码 (已加密)
-    image         String? // 用户头像
-    accounts      Account[] // 用户的第三方账户
-    sessions      Session[] // 用户的会话
-    chats         Chat[] // 用户的聊天
-    dailyUsage    Int       @default(0) // 当天使用次数
-    lastUsageDate DateTime? // 上次使用日期，用于重置计数
-    maxDailyUsage Int       @default(100) // 每日最大使用次数
-    isPremium     Boolean   @default(false) // 是否为付费用户
+    id                   String                @id @default(cuid()) // 唯一标识符
+    name                 String? // 用户名称
+    email                String?               @unique // 用户邮箱
+    emailVerified        DateTime? // 邮箱验证时间
+    password             String // 密码 (已加密)
+    image                String? // 用户头像
+    accounts             Account[] // 用户的第三方账户
+    sessions             Session[] // 用户的会话
+    chats                Chat[] // 用户的聊天
+    dailyUsage           Int                   @default(0) // 当天使用次数
+    lastUsageDate        DateTime? // 上次使用日期，用于重置计数
+    maxDailyUsage        Int                   @default(100) // 每日最大使用次数
+    isPremium            Boolean               @default(false) // 是否为付费用户
+    signalPreference     UserSignalPreference? // 信号偏好设置
 }
 
 // 验证令牌
@@ -82,4 +83,52 @@ model Message {
     createdAt DateTime @default(now()) // 创建时间
     chatId    String // 所属聊天ID
     chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade) // 聊天关系
+}
+
+// 交易信号
+model TradingSignal {
+    id             String   @id @default(cuid()) // 唯一标识符
+    symbol         String // 交易对符号 (如 BTCUSDT)
+    signalType     String // 信号类型 (BUY, SELL, HOLD, ARBITRAGE)
+    strength       Float // 信号强度 (0-1)
+    price          Float // 信号生成时的价格
+    targetPrice    Float? // 目标价格
+    stopLoss       Float? // 止损价格
+    riskLevel      String // 风险等级 (LOW, MEDIUM, HIGH)
+    timeframe      String // 时间框架 (1m, 5m, 15m, 1h, 4h, 1d)
+    indicators     Json // 技术指标数据
+    analysis       String   @db.Text // 分析说明
+    isActive       Boolean  @default(true) // 是否有效
+    createdAt      DateTime @default(now()) // 创建时间
+    expiresAt      DateTime? // 过期时间
+    notifications  SignalNotification[] // 推送记录
+}
+
+// 用户信号偏好设置
+model UserSignalPreference {
+    id           String   @id @default(cuid()) // 唯一标识符
+    userId       String   @unique // 用户ID
+    symbols      String[] // 关注的交易对
+    signalTypes  String[] // 关注的信号类型
+    riskLevels   String[] // 接受的风险等级
+    timeframes   String[] // 关注的时间框架
+    pushEnabled  Boolean  @default(true) // 是否启用推送
+    minStrength  Float    @default(0.6) // 最小信号强度
+    maxDaily     Int      @default(50) // 每日最大推送数量
+    createdAt    DateTime @default(now()) // 创建时间
+    updatedAt    DateTime @updatedAt // 更新时间
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade) // 用户关系
+}
+
+// 信号推送记录
+model SignalNotification {
+    id       String        @id @default(cuid()) // 唯一标识符
+    userId   String // 用户ID
+    signalId String // 信号ID
+    sentAt   DateTime      @default(now()) // 发送时间
+    readAt   DateTime? // 阅读时间
+    method   String // 推送方式 (WEBSOCKET, EMAIL, SMS)
+    signal   TradingSignal @relation(fields: [signalId], references: [id], onDelete: Cascade) // 信号关系
+
+    @@unique([userId, signalId])
 }

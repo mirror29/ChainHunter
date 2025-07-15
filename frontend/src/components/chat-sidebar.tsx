@@ -9,6 +9,8 @@ import {
   LogOut,
   Trash2,
   Timer,
+  TrendingUp,
+  Database,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -128,7 +130,7 @@ export function ChatSidebar({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-4">
+      <div className="p-4 space-y-2">
         <Button
           onClick={onNewChat}
           className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
@@ -136,6 +138,17 @@ export function ChatSidebar({
           <Plus className="h-4 w-4" />
           New Chat
         </Button>
+
+        {/* Trading Signals Button */}
+        <Link href="/signals" className="w-full">
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
+          >
+            <TrendingUp className="h-4 w-4" />
+            交易信号
+          </Button>
+        </Link>
       </div>
 
       {/* Chats List */}
@@ -215,6 +228,26 @@ export function ChatSidebar({
           </div>
         </div>
       </div>
+
+      {/* Database Status and Admin Link */}
+      {/* <div className="px-4 pb-2">
+        <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2 text-xs">
+            <Database className="h-3 w-3" />
+            <span className="text-gray-600">数据库状态</span>
+          </div>
+          <Link href="/admin" className="w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 h-8 text-xs"
+            >
+              <Database className="h-3 w-3" />
+              数据库管理
+            </Button>
+          </Link>
+        </div>
+      </div> */}
 
       {/* User Info and Settings */}
       <div className="p-4 m-2 mt-0 bg-muted/50 rounded-lg flex item-center">

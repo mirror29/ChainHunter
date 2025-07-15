@@ -36,6 +36,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/code-block";
 import { ChainHunterLogo } from "@/components/ui/chain-hunter-logo";
+import { SignalNotifications } from "@/components/signal-notifications";
 
 interface Message {
   id: string;
@@ -923,6 +924,7 @@ export default function ChatPage() {
               </Button>
             </div>
             <div className="flex items-center gap-2">
+              <SignalNotifications />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
