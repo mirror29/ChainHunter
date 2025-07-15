@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://chain-hunter.vercel.app
+
+# Sitemaps
+Sitemap: https://chain-hunter.vercel.app/sitemap.xml

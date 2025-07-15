@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Plus, Settings, LogOut, Trash2 } from "lucide-react";
+import {
+  MessageSquare,
+  Plus,
+  Settings,
+  LogOut,
+  Trash2,
+  Timer,
+  TrendingUp,
+  Database,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -13,6 +20,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Link from "next/link";
+import { Progress } from "@/components/ui/progress";
+import { useRouter } from "next/navigation";
 
 interface ChatSession {
   id: string;
@@ -31,6 +40,9 @@ interface ChatSidebarProps {
   userEmail: string;
   userName?: string;
   onDeleteChat?: (id: string) => void;
+  userDailyUsage?: number;
+  userMaxDailyUsage?: number;
+  userIsPremium?: boolean;
 }
 
 export function ChatSidebar({
@@ -42,6 +54,9 @@ export function ChatSidebar({
   userEmail,
   userName = "User",
   onDeleteChat,
+  userDailyUsage,
+  userMaxDailyUsage,
+  userIsPremium,
 }: ChatSidebarProps) {
   const userInitial = userName
     ? userName.charAt(0).toUpperCase()
@@ -49,11 +64,39 @@ export function ChatSidebar({
     ? userEmail.charAt(0).toUpperCase()
     : "U";
 
+  const router = useRouter();
+
   const handleDeleteChat = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDeleteChat) {
       onDeleteChat(id);
     }
+  };
+
+  const hasUsageData =
+    typeof userDailyUsage === "number" && typeof userMaxDailyUsage === "number";
+
+  // 计算剩余次数
+  const remainingUsage = hasUsageData
+    ? Math.max(0, (userMaxDailyUsage || 0) - (userDailyUsage || 0))
+    : 0;
+
+  // 判断是否低于阈值
+  const isWarning =
+    hasUsageData && remainingUsage <= (userMaxDailyUsage || 0) * 0.2;
+
+  // 计算使用百分比
+  const usedPercentage = hasUsageData
+    ? Math.round(
+        (((userMaxDailyUsage || 0) - remainingUsage) /
+          (userMaxDailyUsage || 1)) *
+          100
+      )
+    : 0;
+
+  // 处理点击剩余次数跳转到付费页面
+  const handleUpgradeClick = () => {
+    router.push("/payment");
   };
 
   return (
@@ -87,7 +130,7 @@ export function ChatSidebar({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-4">
+      <div className="p-4 space-y-2">
         <Button
           onClick={onNewChat}
           className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
@@ -95,6 +138,17 @@ export function ChatSidebar({
           <Plus className="h-4 w-4" />
           New Chat
         </Button>
+
+        {/* Trading Signals Button */}
+        <Link href="/signals" className="w-full">
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 rounded-full shadow-sm hover:shadow-md cursor-pointer"
+          >
+            <TrendingUp className="h-4 w-4" />
+            交易信号
+          </Button>
+        </Link>
       </div>
 
       {/* Chats List */}
@@ -152,6 +206,7 @@ export function ChatSidebar({
                                   size="sm"
                                   className="cursor-pointer"
                                   onClick={(e) => {
+                                    e.stopPropagation();
                                     handleDeleteChat(session.id, e);
                                   }}
                                 >
@@ -173,6 +228,26 @@ export function ChatSidebar({
           </div>
         </div>
       </div>
+
+      {/* Database Status and Admin Link */}
+      {/* <div className="px-4 pb-2">
+        <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2 text-xs">
+            <Database className="h-3 w-3" />
+            <span className="text-gray-600">数据库状态</span>
+          </div>
+          <Link href="/admin" className="w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 h-8 text-xs"
+            >
+              <Database className="h-3 w-3" />
+              数据库管理
+            </Button>
+          </Link>
+        </div>
+      </div> */}
 
       {/* User Info and Settings */}
       <div className="p-4 m-2 mt-0 bg-muted/50 rounded-lg flex item-center">
@@ -200,14 +275,41 @@ export function ChatSidebar({
             >
               <Settings className="h-4 w-4" />
             </Button>
-            {/* <Settings className="h-4 w-4 text-muted-foreground" /> */}
           </PopoverTrigger>
-          <PopoverContent className="w-56 shadow-md border-0 p-0" align="end">
+          <PopoverContent className="w-56 shadow-md border-0 p-2" align="end">
             <div>
               <div className="space-y-2">
+                {hasUsageData && (
+                  <div
+                    onClick={handleUpgradeClick}
+                    className="flex flex-col px-3 py-2 gap-2 border-0 cursor-pointer w-full"
+                  >
+                    <div
+                      className="flex justify-between items-center mb-1 text-xs cursor-pointer hover:text-primary transition-colors"
+                      title="点击升级套餐"
+                    >
+                      <span>今日剩余次数:</span>
+                      <span
+                        className={isWarning ? "text-red-500 font-bold" : ""}
+                      >
+                        {remainingUsage} / {userMaxDailyUsage}
+                      </span>
+                    </div>
+                    <Progress
+                      value={usedPercentage}
+                      className="h-1"
+                      indicatorClassName={
+                        isWarning
+                          ? "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
+                          : "bg-gradient-to-r from-primary via-blue-500 to-cyan-400"
+                      }
+                    />
+                  </div>
+                )}
+
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-2 border-0"
+                  className="w-full justify-start gap-2 border-0 cursor-pointer"
                   onClick={onSignOut}
                 >
                   <LogOut className="h-4 w-4" />

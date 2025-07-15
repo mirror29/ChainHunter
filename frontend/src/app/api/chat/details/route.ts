@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     // 从系统消息提取哈希值
     const hashMessage = chat.messages.find(
-      (msg) =>
+      (msg: { role: string; content: string | string[] }) =>
         msg.role === "system" && msg.content.includes("Conversation Hash:")
     );
 
@@ -64,8 +64,11 @@ export async function GET(request: NextRequest) {
       title: chat.title || "未命名会话",
       timestamp: chat.updatedAt,
       messages: chat.messages
-        .filter((msg) => !msg.content.includes("Conversation Hash:"))
-        .map((msg) => ({
+        .filter(
+          (msg: { content: string | string[] }) =>
+            !msg.content.includes("Conversation Hash:")
+        )
+        .map((msg: { id: any; role: any; content: any; createdAt: any }) => ({
           id: msg.id,
           role: msg.role,
           content: msg.content,

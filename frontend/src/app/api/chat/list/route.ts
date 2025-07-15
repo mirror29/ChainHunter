@@ -1,13 +1,29 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { PrismaClient } from "@prisma/client";
+import { authOptions } from "@/lib/auth";
+
+// 设置响应超时和缓存
+export const maxDuration = 30; // 增加函数执行时间上限到30秒
+export const dynamic = "force-dynamic"; // 确保不会被缓存
 
 export async function GET() {
+  // 为每个请求创建独立的Prisma实例
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url:
+          process.env.POSTGRES_URL_NON_POOLING ||
+          process.env.POSTGRES_PRISMA_URL,
+      },
+    },
+  });
+
   try {
     // 检查身份验证
     const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.id) {
+      await prisma.$disconnect(); // 断开连接
       return NextResponse.json(
         { error: "Unauthorized", details: "No valid session found" },
         { status: 401 }
@@ -16,83 +32,91 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    // 使用简化的查询，避免复杂的子查询
+    // 简化查询，仅获取必要的数据
     const chats = await prisma.chat.findMany({
-      where: {
-        userId,
-      },
+      where: { userId },
       select: {
         id: true,
         title: true,
         updatedAt: true,
-        messages: {
-          // 选择所有系统消息（用于提取哈希值）
-          where: {
-            role: "system",
-          },
-          select: {
-            id: true,
-            role: true,
-            content: true,
-          },
-        },
+        // 使用两个单独的查询获取需要的消息，而不是获取所有消息
       },
       orderBy: {
         updatedAt: "desc",
       },
+      take: 50, // 限制返回的聊天总数
     });
 
-    // 提取哈希值并格式化数据
-    const formattedChats = await Promise.all(
-      chats.map(async (chat) => {
-        // 从系统消息查找哈希值
-        const hashMessage = chat.messages.find((msg) =>
-          msg.content.includes("Conversation Hash:")
-        );
+    // 收集所有聊天ID
+    const chatIds = chats.map((chat) => chat.id);
 
-        let hash = chat.id; // 如果找不到哈希值，则使用聊天ID作为后备
+    // 获取哈希值的系统消息
+    const hashMessages = await prisma.message.findMany({
+      where: {
+        chatId: { in: chatIds },
+        role: "system",
+        content: { contains: "Conversation Hash:" },
+      },
+      select: {
+        chatId: true,
+        content: true,
+      },
+    });
 
-        if (hashMessage) {
-          const match = hashMessage.content.match(
-            /Conversation Hash: ([\w-]+)/
-          );
-          if (match && match[1]) {
-            hash = match[1];
-          }
+    // 为每个聊天获取最后一条非系统消息
+    const lastMessages = await prisma.message.findMany({
+      where: {
+        chatId: { in: chatIds },
+        role: { not: "system" },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      distinct: ["chatId"],
+      select: {
+        chatId: true,
+        content: true,
+      },
+    });
+
+    // 索引哈希值和最后消息，以便快速查找
+    const hashMessagesByChatId = hashMessages.reduce((acc, msg) => {
+      acc[msg.chatId] = msg.content;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const lastMessagesByChatId = lastMessages.reduce((acc, msg) => {
+      acc[msg.chatId] = msg.content;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // 在内存中处理数据
+    const formattedChats = chats.map((chat) => {
+      // 查找哈希值
+      let hash = chat.id;
+      const hashMessageContent = hashMessagesByChatId[chat.id];
+      if (hashMessageContent) {
+        const match = hashMessageContent.match(/Conversation Hash: ([\w-]+)/);
+        if (match && match[1]) {
+          hash = match[1];
         }
+      }
 
-        // 单独查询每个聊天的最后一条非系统消息
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            chatId: chat.id,
-            role: {
-              not: "system",
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            content: true,
-          },
-        });
+      // 获取最后一条消息
+      const lastMessageContent = lastMessagesByChatId[chat.id] || "无消息内容";
+      const previewText =
+        lastMessageContent.length > 40
+          ? lastMessageContent.slice(0, 40) + "..."
+          : lastMessageContent;
 
-        const previewText = lastMessage
-          ? lastMessage.content.length > 40
-            ? lastMessage.content.slice(0, 40) + "..."
-            : lastMessage.content
-          : "无消息内容";
-
-        return {
-          id: chat.id,
-          hash,
-          title: chat.title || "未命名会话",
-          lastMessage: previewText,
-          timestamp: chat.updatedAt,
-          // 不包含完整的消息内容
-        };
-      })
-    );
+      return {
+        id: chat.id,
+        hash,
+        title: chat.title || "未命名会话",
+        lastMessage: previewText,
+        timestamp: chat.updatedAt,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -100,9 +124,23 @@ export async function GET() {
     });
   } catch (error) {
     console.error("加载聊天列表出错:", error);
+
+    // 错误处理
+    let errorMessage = "未知错误";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { error: `Failed to load chat list: ${error}` },
+      { error: `Failed to load chat list: ${errorMessage}` },
       { status: 500 }
     );
+  } finally {
+    // 确保释放连接
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      console.error("断开连接时出错:", error);
+    }
   }
 }

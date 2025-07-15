@@ -1,0 +1,34 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3  # 建议使用最新版本
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2  # 建议使用最新版本
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: SSH and deploy
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.AWS_HOST }}
+        username: ec2-user  # 如果你使用的是其他 Linux 发行版，可能需要修改
+        key: ${{ secrets.AWS_SSH_KEY }}
+        script: |
+          cd ChainHunter
+          git pull
+          docker-compose down python_backend
+          docker-compose build python_backend
+          docker-compose up -d python_backend
+          docker system prune -af

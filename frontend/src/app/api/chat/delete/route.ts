@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function DELETE(req: Request) {
   try {
@@ -37,7 +37,10 @@ export async function DELETE(req: Request) {
 
     if (!chat) {
       return NextResponse.json(
-        { error: "Chat not found", details: "Chat not found or doesn't belong to user" },
+        {
+          error: "Chat not found",
+          details: "Chat not found or doesn't belong to user",
+        },
         { status: 404 }
       );
     }

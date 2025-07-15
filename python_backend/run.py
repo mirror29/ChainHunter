@@ -6,6 +6,7 @@ from openai.types.beta.threads import Run
 from agents import OpenAIChatCompletionsModel, Agent, Runner, set_default_openai_client, ModelSettings
 from agents.mcp import MCPServer, MCPServerStdio
 from contextlib import AsyncExitStack
+from agents.extensions.models.litellm_model import LitellmModel
 
 load_dotenv()
 
@@ -25,10 +26,13 @@ deepseek_model = OpenAIChatCompletionsModel(
 async def main():
     await mcp_run_multi(
     servers_params=[
-        {"name": "coincap-mcp","command":"npx", "args": ["coincap-mcp"]},
-        {"name": "webresearch","command":"npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
+        # {"name": "cryptoc-prices", "command": "python", "args": ["./mcp/CryptocPrices/main.py"]},
+        {"name": "cryptoc-prices", "command": "python", "args": ["mcp/CryptocPrices/run.py"]},
+        # {"name": "coincap-mcp","command":"npx", "args": ["coincap-mcp"]},
+        # {"name": "coincap-mcp","command":"./mcp/coincap-mcp/build/index.js", "args": [""]},
+        # {"name": "webresearch","command":"npx", "args": ["-y", "@mzxrai/mcp-webresearch@latest"]},
     ],
-    message="访问https://openai.github.io/openai-agents-python/mcp/这个网页并截图"
+    message="比特币的走势图如何，应该买入还是卖出"
     )
 
 async def mcp_run_multi(servers_params, message):
@@ -55,7 +59,7 @@ async def mcp_run_multi(servers_params, message):
             instructions="你是一个加密货币信息助手，使用工具来获取加密货币的价格和其他信息。",
             mcp_servers=servers,
             model_settings=ModelSettings(tool_choice="required"),
-            model=deepseek_model
+            model=LitellmModel(model="deepseek/deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY")),
         )
 
         try:

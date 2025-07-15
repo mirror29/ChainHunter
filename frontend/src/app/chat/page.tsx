@@ -20,7 +20,6 @@ import {
   ChevronRight,
   SendHorizontal,
   Plus,
-  Upload,
   Bot,
   Loader2,
   X,
@@ -28,6 +27,7 @@ import {
   Database,
   Coins,
   LineChart,
+  Square,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
@@ -35,6 +35,8 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/code-block";
+import { ChainHunterLogo } from "@/components/ui/chain-hunter-logo";
+import { SignalNotifications } from "@/components/signal-notifications";
 
 interface Message {
   id: string;
@@ -90,37 +92,36 @@ const MessageBubble = ({
             <span>思考中...</span>
           </div>
         ) : (
-          <ReactMarkdown
-            className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-            remarkPlugins={[remarkGfm]}
-            components={{
-              p({ children }) {
-                return <p className="mb-2 last:mb-0">{children}</p>;
-              },
-              code({ node, inline, className, children, ...props }) {
-                if (children.length) {
-                  children[0] = (children[0] as string).replace("`▍`", "▍");
-                }
+          <div className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => (
+                  <p className="mb-2 last:mb-0">{children}</p>
+                ),
+                code: ({ className, children, ...props }) => {
+                  const match = /language-(\w+)/.exec(className || "");
+                  const content = String(children).replace(/\n$/, "");
+                  const lang = match && match[1] ? match[1] : "";
 
-                const match = /language-(\w+)/.exec(className || "");
-
-                return !inline ? (
-                  <CodeBlock
-                    key={Math.random()}
-                    language={(match && match[1]) || ""}
-                    value={String(children).replace(/\n$/, "")}
-                    {...props}
-                  />
-                ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                );
-              },
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
+                  return !className || !className.startsWith("language-") ? (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  ) : (
+                    <CodeBlock
+                      key={Math.random()}
+                      language={lang}
+                      value={content}
+                      {...props}
+                    />
+                  );
+                },
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
       {isUser && (
@@ -208,36 +209,7 @@ const WelcomeScreen = ({
         className="text-center mb-8"
       >
         <div className="flex justify-center items-center mb-4">
-          <div className="relative mr-2">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600 font-bold text-4xl">
-              Chain
-            </span>
-            <motion.div
-              className="absolute -bottom-1 left-0 h-1 w-0 bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600"
-              animate={{ width: "100%" }}
-              transition={{
-                duration: 1.5,
-                delay: 0.5,
-                ease: "easeOut",
-              }}
-            />
-          </div>
-          <motion.span
-            className="dark:text-slate-200 font-bold text-4xl"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1 }}
-          >
-            Hunter
-          </motion.span>
-          <motion.span
-            className="dark:text-slate-200 font-bold text-4xl ml-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 1.5 }}
-          >
-            AI
-          </motion.span>
+          <ChainHunterLogo size="xl" showAI={true} />
         </div>
         <p className="text-xl text-muted-foreground max-w-lg mx-auto">
           {t("hero.subtitle")}
@@ -286,11 +258,58 @@ export default function ChatPage() {
   const [lastSavedChatHash, setLastSavedChatHash] = useState<string>("");
   const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(0);
   const [isSavingChat, setIsSavingChat] = useState(false); // 添加保存状态标志
+  // 添加本地使用数据状态
+  const [userDailyUsage, setUserDailyUsage] = useState<number | undefined>(
+    undefined
+  );
+  const [userMaxDailyUsage, setUserMaxDailyUsage] = useState<
+    number | undefined
+  >(undefined);
+  const [userIsPremium, setUserIsPremium] = useState<boolean | undefined>(
+    undefined
+  );
+
+  // 添加流式响应控制状态
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamControllerRef = useRef<AbortController | null>(null);
+
+  // 处理停止回复的函数
+  const handleStopResponse = () => {
+    if (streamControllerRef.current) {
+      streamControllerRef.current.abort();
+      streamControllerRef.current = null;
+      setIsStreaming(false);
+    }
+  };
+
+  // 加载用户使用情况函数
+  const loadUserUsage = async () => {
+    try {
+      console.log("加载用户使用情况...");
+      const response = await fetch("/api/user/usage");
+      if (!response.ok) {
+        throw new Error("获取使用次数失败");
+      }
+
+      const data = await response.json();
+      if (data.success && data.usage) {
+        console.log("用户使用情况加载成功:", data.usage);
+        setUserDailyUsage(data.usage.daily);
+        setUserMaxDailyUsage(data.usage.max);
+        setUserIsPremium(data.usage.isPremium);
+      }
+    } catch (error) {
+      console.error("加载用户使用情况失败:", error);
+    }
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
+      // 只加载一次用户使用情况
+      loadUserUsage();
+
       // Load saved chats from the database
       loadSavedChats().then(() => {
         // 标记初始加载完成
@@ -328,32 +347,69 @@ export default function ChatPage() {
     if (e) e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // 创建助手消息占位ID - 全局声明，解决linter错误
+    let assistantMessageId = "";
+
     // 确保关闭欢迎页面
     setShowWelcome(false);
 
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, newUserMessage]);
-    setInput("");
-    setIsLoading(true);
-
-    // 创建助手消息占位
-    const assistantMessageId = (Date.now() + 1).toString();
-    const pendingAssistantMessage: Message = {
-      id: assistantMessageId,
-      role: "assistant",
-      content: "正在思考中...", // 使用loading文本而非光标
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, pendingAssistantMessage]);
-
     try {
+      // 创建 AbortController 用于可能的中断
+      streamControllerRef.current = new AbortController();
+      setIsStreaming(true);
+
+      // 首先更新使用次数并检查是否超出限制
+      const usageResponse = await fetch("/api/user/updateUsage", {
+        method: "POST",
+      });
+
+      // 如果请求不成功，检查是否是因为超出限制
+      if (!usageResponse.ok) {
+        const errorData = await usageResponse.json();
+
+        // 如果是超出限制，提示用户并重定向到付费页面
+        if (errorData.limitExceeded) {
+          alert("您今日的免费使用次数已用完，请升级会员继续使用。");
+          router.push("/payment");
+          return;
+        }
+
+        // 其他错误则继续尝试发送消息
+        console.error("更新使用次数失败:", errorData);
+      } else {
+        // 请求成功，直接在前端更新使用次数
+        const usageData = await usageResponse.json();
+        if (usageData.success && usageData.usage) {
+          // 更新本地状态
+          setUserDailyUsage(usageData.usage.daily);
+          setUserMaxDailyUsage(usageData.usage.max);
+          setUserIsPremium(usageData.usage.isPremium);
+          console.log("已更新使用次数:", usageData.usage);
+        }
+      }
+
+      const newUserMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: input,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, newUserMessage]);
+      setInput("");
+      setIsLoading(true);
+
+      // 创建助手消息占位
+      assistantMessageId = (Date.now() + 1).toString();
+      const pendingAssistantMessage: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "正在思考中...", // 使用loading文本而非光标
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, pendingAssistantMessage]);
+
       // 调用支持流式响应的API
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -366,6 +422,7 @@ export default function ChatPage() {
           chatHash: currentChatHash,
           stream: true,
         }),
+        signal: streamControllerRef.current.signal, // 添加中断信号
       });
 
       if (!response.ok) {
@@ -521,21 +578,32 @@ export default function ChatPage() {
           console.error("解析chunk错误:", chunk, e);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
       // 更新消息显示错误
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMessageId
-            ? {
-                ...msg,
-                content: "很抱歉，处理您的请求时出现错误。请稍后再试。",
-              }
-            : msg
-        )
+      const assistantMsg = messages.find(
+        (m) =>
+          m.role === "assistant" &&
+          (m.content === "正在思考中..." || m.content === "")
       );
+
+      if (assistantMsg) {
+        // 如果是中断错误，显示中断消息
+        const errorMessage =
+          error.name === "AbortError"
+            ? "回复已被用户中断"
+            : "很抱歉，处理您的请求时出现错误。请稍后再试。";
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsg.id ? { ...msg, content: errorMessage } : msg
+          )
+        );
+      }
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      streamControllerRef.current = null;
     }
   };
 
@@ -829,6 +897,9 @@ export default function ChatPage() {
                 userEmail={session?.user?.email || "User"}
                 userName={session?.user?.name || undefined}
                 onDeleteChat={handleDeleteChat}
+                userDailyUsage={userDailyUsage}
+                userMaxDailyUsage={userMaxDailyUsage}
+                userIsPremium={userIsPremium}
               />
             </motion.div>
           )}
@@ -851,11 +922,9 @@ export default function ChatPage() {
                   <ChevronRight className="h-5 w-5" />
                 )}
               </Button>
-              <h1 className="font-semibold text-lg">
-                ChainHunter AI Assistant
-              </h1>
             </div>
             <div className="flex items-center gap-2">
+              <SignalNotifications />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -947,6 +1016,7 @@ export default function ChatPage() {
                         handleSendMessage();
                       }
                     }}
+                    disabled={isStreaming}
                   />
                 ) : (
                   <Textarea
@@ -960,17 +1030,30 @@ export default function ChatPage() {
                         handleSendMessage();
                       }
                     }}
+                    disabled={isStreaming}
                   />
                 )}
                 <div className="absolute bottom-2 right-2 flex gap-1">
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md"
-                    disabled={!input.trim() || isLoading}
-                  >
-                    <SendHorizontal className="h-4 w-4 text-white" />
-                  </Button>
+                  {isStreaming ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 shadow-sm hover:shadow-md cursor-pointer"
+                      onClick={handleStopResponse}
+                      title="终止回复"
+                    >
+                      <Square className="h-4 w-4 text-white" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md cursor-pointer"
+                      disabled={!input.trim() || isLoading}
+                    >
+                      <SendHorizontal className="h-4 w-4 text-white" />
+                    </Button>
+                  )}
                 </div>
               </div>
               <input

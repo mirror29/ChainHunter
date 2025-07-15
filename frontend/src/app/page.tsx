@@ -29,6 +29,7 @@ import {
 } from "@/lib/homeConfig";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { ChainHunterLogo } from "@/components/ui/chain-hunter-logo";
 
 export default function Home() {
   const { t } = useI18n();
@@ -678,28 +679,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
               <div className="text-3xl font-bold flex items-center gap-2 mb-4">
-                <div className="relative">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600">
-                    Chain
-                  </span>
-                  <motion.div
-                    className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-primary via-blue-500 to-primary dark:from-blue-400 dark:via-cyan-400 dark:to-blue-600"
-                    animate={{ width: "100%" }}
-                    transition={{
-                      duration: 1.5,
-                      delay: 0.5,
-                      ease: "easeOut",
-                    }}
-                  />
-                </div>
-                <motion.span
-                  className="dark:text-slate-200"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1 }}
-                >
-                  Hunter
-                </motion.span>
+                <ChainHunterLogo size="lg" />
               </div>
 
               <p className="text-muted-foreground max-w-md mb-6 dark:text-slate-400">

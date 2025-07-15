@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
@@ -16,7 +17,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Lock, Mail, Github, User, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Navbar } from "@/components/navbar";
+
+// 使用动态导入Navbar，避免静态生成时加载
+const Navbar = dynamic(
+  () => import("@/components/navbar").then((mod) => mod.Navbar),
+  {
+    ssr: false,
+    loading: () => <div className="h-16"></div>,
+  }
+);
 
 export default function LoginPage() {
   const { status } = useSession();
@@ -60,14 +69,13 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/chat",
       });
 
       if (result?.error) {
         setError(result.error);
         return;
       }
-
-      router.push("/chat");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -125,14 +133,13 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/chat",
       });
 
       if (result?.error) {
         setError(result.error);
         return;
       }
-
-      router.push("/chat");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -143,10 +150,21 @@ export default function LoginPage() {
   const socialLogin = async (provider: string) => {
     setIsLoading(true);
     try {
-      await signIn(provider, { callbackUrl: "/chat" });
+      const result = await signIn(provider, {
+        callbackUrl: "/chat",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+        setIsLoading(false);
+      } else {
+        // 手动重定向
+        router.push("/chat");
+      }
     } catch (error) {
-      console.error("Social login error:", error);
-      setError("Failed to login with social provider. Please try again.");
+      console.error(`${provider}登录错误:`, error);
+      setError(`使用${provider}登录失败，请重试。`);
       setIsLoading(false);
     }
   };
@@ -171,9 +189,13 @@ export default function LoginPage() {
               className="w-full"
               onValueChange={(value) => setMode(value as "login" | "register")}
             >
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 ">
+                <TabsTrigger value="login" className="cursor-pointer">
+                  Login
+                </TabsTrigger>
+                <TabsTrigger value="register" className="cursor-pointer">
+                  Register
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -215,7 +237,7 @@ export default function LoginPage() {
                   )}
                   <Button
                     type="submit"
-                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700 cursor-pointer"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -298,7 +320,7 @@ export default function LoginPage() {
                   )}
                   <Button
                     type="submit"
-                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700"
+                    className="w-full rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-700 cursor-pointer"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -328,7 +350,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-4 w-full">
               <Button
                 variant="outline"
-                className="w-full shadow-sm border-0 hover:shadow-md"
+                className="w-full shadow-sm border-0 hover:shadow-md cursor-pointer"
                 onClick={() => socialLogin("github")}
                 disabled={isLoading}
               >
@@ -337,7 +359,7 @@ export default function LoginPage() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full shadow-sm border-0 hover:shadow-md"
+                className="w-full shadow-sm border-0 hover:shadow-md cursor-pointer"
                 onClick={() => socialLogin("google")}
                 disabled={isLoading}
               >
