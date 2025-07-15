@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Database, 
-  Server, 
-  Activity, 
-  Settings, 
+import {
+  Database,
+  Server,
+  Activity,
   ExternalLink,
   GitBranch,
   RefreshCw
@@ -25,7 +24,7 @@ export default function AdminPage() {
       setLoading(true)
       const response = await fetch('/api/database/test')
       const data = await response.json()
-      
+
       if (response.ok) {
         setStatus('正常')
       } else {
@@ -44,7 +43,7 @@ export default function AdminPage() {
       setLoading(true)
       const response = await fetch('/api/database/keepalive', { method: 'POST' })
       const data = await response.json()
-      
+
       if (response.ok) {
         setStatus('保活成功')
       } else {
@@ -110,7 +109,7 @@ export default function AdminPage() {
                   {status}
                 </Badge>
               </div>
-              
+
               {lastChecked && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">最后检查:</span>
@@ -119,17 +118,17 @@ export default function AdminPage() {
               )}
 
               <div className="flex gap-2">
-                <Button 
-                  onClick={testDatabase} 
+                <Button
+                  onClick={testDatabase}
                   disabled={loading}
                   className="flex-1"
                 >
                   {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
                   测试连接
                 </Button>
-                
-                <Button 
-                  onClick={executeKeepAlive} 
+
+                <Button
+                  onClick={executeKeepAlive}
                   disabled={loading}
                   variant="outline"
                   className="flex-1"
@@ -140,7 +139,7 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* 快速操作 */}
           <Card>
             <CardHeader>
@@ -150,8 +149,8 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col items-center gap-2"
                 onClick={() => fetch('/api/database/keepalive')}
               >
@@ -161,9 +160,9 @@ export default function AdminPage() {
                   <div className="text-xs text-gray-500">检查连接状态</div>
                 </div>
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col items-center gap-2"
                 onClick={() => fetch('/api/database/keepalive', { method: 'POST' })}
               >
@@ -173,9 +172,9 @@ export default function AdminPage() {
                   <div className="text-xs text-gray-500">执行多项操作激活</div>
                 </div>
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col items-center gap-2"
                 onClick={() => window.location.reload()}
               >
@@ -203,7 +202,7 @@ export default function AdminPage() {
                   <p>• 仅在用户在线时工作，需要配合GitHub Actions使用</p>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <h4 className="font-medium text-amber-800 mb-2">注意事项</h4>
                 <div className="text-sm text-amber-700">
@@ -237,7 +236,7 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <h4 className="font-medium text-amber-800 mb-2">所需设置</h4>
                 <div className="text-sm text-amber-700 space-y-1">
@@ -255,7 +254,7 @@ export default function AdminPage() {
               </Button>
             </CardContent>
           </Card>
-          
+
           {/* 第三方保活服务 */}
           <Card>
             <CardHeader>
@@ -265,7 +264,7 @@ export default function AdminPage() {
               <p className="text-sm text-gray-600">
                 除了GitHub Actions，您还可以使用以下第三方服务来确保数据库保活：
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-medium mb-2">Uptime Robot</h4>
@@ -278,7 +277,7 @@ export default function AdminPage() {
                     </a>
                   </Button>
                 </div>
-                
+
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-medium mb-2">Pingdom</h4>
                   <p className="text-sm text-gray-600 mb-2">
@@ -291,7 +290,7 @@ export default function AdminPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <h4 className="font-medium text-green-800 mb-2">保活端点</h4>
                 <div className="text-sm text-green-700">
