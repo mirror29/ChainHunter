@@ -20,7 +20,7 @@ jobs:
         echo "Timestamp: $(date)"
         
         # 从环境变量获取应用URL，如果没有则使用默认值
-        APP_URL="${{ secrets.APP_URL || 'https://your-app-domain.com' }}"
+        APP_URL="${{ secrets.APP_URL || 'https://chain-hunter.vercel.app' }}"
         
         echo "Pinging database via: $APP_URL/api/database/keepalive"
         
